@@ -1,3 +1,5 @@
+import io.kobby.dsl.kobbyDSL
+
 description = "todo"
 
 buildscript {
@@ -7,3 +9,9 @@ buildscript {
 }
 
 apply(plugin = "io.kobby")
+
+kobbyDSL {
+    source = fileTree("src/main/resources") {
+        include("**/*.graphqls")
+    }
+}
