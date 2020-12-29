@@ -3,12 +3,13 @@
  */
 package kobby.gradle.integration.tests
 
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.shouldBe
 
-class LibraryTest {
-    @Test fun testSomeLibraryMethod() {
+class LibraryTest : AnnotationSpec() {
+    @Test
+    fun testSomeLibraryMethod() {
         val classUnderTest = Library()
-        assertTrue(classUnderTest.someLibraryMethod(), "someLibraryMethod should return 'true'")
+        classUnderTest.someLibraryMethod() shouldBe true
     }
 }
