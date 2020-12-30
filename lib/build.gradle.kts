@@ -1,4 +1,4 @@
-import io.kobby.dsl.kobbyDSL
+import io.kobby.kobby
 
 description = "todo"
 
@@ -10,7 +10,7 @@ buildscript {
 
 apply(plugin = "io.kobby")
 
-kobbyDSL {
+kobby {
     schema {
         local = file("src/main/resources/io/kobby/gradle/integration/api/cinema.graphqls")
     }
