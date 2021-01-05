@@ -11,29 +11,15 @@ buildscript {
 apply(plugin = "io.kobby")
 
 kobby {
-    schema {
-        local = file("src/main/resources/io/kobby/gradle/integration/api/cinema.graphqls")
-    }
-
-    schemaSearchTree = fileTree("src/main/resources") {
-        include("**/*.graphqls")
-    }
     kotlin {
         scalars = mapOf(
             "DateTime" to typeOf("java.time", "OffsetDateTime"),
             "JSON" to typeMap.parameterize(typeString, typeAny.nullable())
         )
 
+        relativePackage = false
         dto {
             jacksonized = false
-        }
-
-        api {
-
-        }
-
-        impl {
-
         }
     }
 }
