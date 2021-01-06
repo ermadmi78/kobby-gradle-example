@@ -17,7 +17,7 @@ kobby {
             "JSON" to typeMap.parameterize(typeString, typeAny.nullable())
         )
 
-        relativePackage = false
+        //relativePackage = false
         dto {
             jacksonized = false
         }
