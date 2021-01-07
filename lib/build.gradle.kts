@@ -16,10 +16,10 @@ kobby {
             "DateTime" to typeOf("java.time", "OffsetDateTime"),
             "JSON" to typeMap.parameterize(typeString, typeAny.nullable())
         )
-
-        //relativePackage = false
-        dto {
-            jacksonized = false
-        }
     }
+}
+
+val jacksonVersion: String by project
+dependencies {
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 }
