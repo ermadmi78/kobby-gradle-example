@@ -1,3 +1,7 @@
+directive @required on FIELD_DEFINITION
+directive @default on FIELD_DEFINITION
+directive @selection on FIELD_DEFINITION
+
 scalar JSON
 scalar DateTime
 
@@ -8,7 +12,7 @@ schema {
 
 type Query {
     country(id: ID!): Country
-    countries(condition: String = "", limit: Int = -1, offset: Int = -1): [Country!]!
+    countries(condition: String = "", limit: Int = -1, offset: Int = -1): [Country!]! @selection
 
     actor(id: ID!): Actor
     actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]!
@@ -18,7 +22,7 @@ type Query {
 }
 
 type Mutation {
-    createActor(countryId: ID!, actor: ActorInput!): Actor!
+    createActor(countryId: ID!, actor: ActorInput): Actor! @selection
     createFilm(countryId: ID!, film: FilmInput!): Film!
     associate(actorId: ID!, filmId: ID!): Boolean!
     doSingle(single: SingleInput!): Single
@@ -30,8 +34,8 @@ interface Base {
 
 interface Entity implements Base {
     id: ID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: DateTime! @default
+    updatedAt: DateTime! @default
 }
 
 type Country implements Entity, Base {
@@ -39,19 +43,24 @@ type Country implements Entity, Base {
     createdAt: DateTime!
     updatedAt: DateTime!
 
-    actor(id: ID!): Actor
-    actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]!
+    actor(id: ID!): Actor @default
+    actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]! @selection
+    actorsCount(condition: String!, limit: Int = -1, offset: Int = -1): Int @selection
 
     film(id: ID!): Film
     films(condition: String = "", limit: Int = -1, offset: Int = -1): [Film!]!
+
+    allActorsAndFilms(condition: String = "", limit: Int = -1, offset: Int = -1): [Entity!]! @selection
 }
 
+# актер
 type Actor implements Entity, Base{
     id: ID!
     createdAt: DateTime!
     updatedAt: DateTime!
 
-    firstName: String!
+    # имя
+    firstName: String! @required
     lastName: String!
     middleName: String
 
@@ -60,7 +69,15 @@ type Actor implements Entity, Base{
     countryId: ID!
     country: Country!
 
-    films(condition: String = "", limit: Int = -1, offset: Int = -1): [Film!]!
+    # фильмы, в которых учавствовал актер
+    films(
+        # условие
+        condition: String,
+        # максимальное количество элементов
+        limit: Int! = -1,
+        # сдвиг
+        offset: Int! = -1
+    ): [Film!]! @required
 }
 
 input ActorInput {
@@ -91,8 +108,11 @@ enum Genre {
     HORROR
 }
 
+# входные данные по фильму
 input FilmInput {
+    # имя
     name: String!
+    # жанр
     genre: Genre!
 }
 
