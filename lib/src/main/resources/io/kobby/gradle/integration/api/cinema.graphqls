@@ -65,7 +65,7 @@ type Actor implements Entity, Base{
 
     # имя
     firstName: String! @required
-    lastName: String!
+    lastName: String! @default
     middleName: String
 
     fields: JSON!
