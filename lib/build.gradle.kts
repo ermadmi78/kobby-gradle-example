@@ -4,7 +4,7 @@ description = "todo"
 
 buildscript {
     dependencies {
-        classpath("io.kobby:kobby-gradle-plugin:0.0.0-SNAPSHOT")
+        classpath("io.kobby:kobby-gradle-plugin:1.0.0-alpha02-SNAPSHOT")
     }
 }
 
