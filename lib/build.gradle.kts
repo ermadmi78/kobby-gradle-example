@@ -2,13 +2,9 @@ import io.github.ermadmi78.kobby.kobby
 
 description = "todo"
 
-buildscript {
-    dependencies {
-        classpath("io.github.ermadmi78:kobby-gradle-plugin:1.0.0-alpha.03")
-    }
+plugins {
+    id("io.github.ermadmi78.kobby") version "1.0.0-alpha.03"
 }
-
-apply(plugin = "io.github.ermadmi78.kobby")
 
 kobby {
     kotlin {
