@@ -3,7 +3,7 @@ import io.github.ermadmi78.kobby.kobby
 description = "todo"
 
 plugins {
-    id("io.github.ermadmi78.kobby") version "1.0.0-alpha.03"
+    id("io.github.ermadmi78.kobby") version "1.0.0-alpha.04"
 }
 
 kobby {
