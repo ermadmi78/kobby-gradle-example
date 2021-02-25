@@ -3,7 +3,7 @@ directive @default on FIELD_DEFINITION
 directive @selection on FIELD_DEFINITION
 
 scalar JSON
-scalar DateTime
+scalar Date
 
 schema {
     query: Query
@@ -11,98 +11,144 @@ schema {
 }
 
 type Query {
-    count: Int!
-
+    # Find country by id. Returns null if not found.
     country(id: ID!): Country
-    countries(condition: String = "", limit: Int = -1, offset: Int = -1): [Country!]! @selection
 
-    actor(id: ID!): Actor
-    actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]!
+    # Find counries by name. Returns empty list if not found.
+    countries(
+        # Case sensitive name of country to search
+        name: String,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Country!]! @selection
 
+    # Find film by id. Returns null if not found.
     film(id: ID!): Film
-    films(condition: String = "", limit: Int = -1, offset: Int = -1): [Film!]!
+
+    # Find films by title and genre. Returns empty list if not found.
+    films(
+        # Case sensitive title of film to search
+        title: String,
+        # Genre of film to search
+        genre: Genre,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Film!]! @selection
+
+    # Find actor by id. Returns null if not found.
+    actor(id: ID!): Actor
+
+    # Find actors by firstName, lastName, birthday and gender. Returns empty list if not found.
+    actors(
+        # Case sensitive first name of actor to search
+        firstName: String,
+        # Case sensitive last name of actor to search
+        lastName: String,
+        # Find actors whose birthday is greater than or equal to birthdayFrom
+        birthdayFrom: Date,
+        # Find actors whose birthday is less than or equal to birthdayTo
+        birthdayTo: Date,
+        # Gender of actor to search
+        gender: Gender,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Actor!]! @selection
+
+    # Find entities by tags
+    taggable(tags: [String!]!): [Taggable!]!
 }
 
 type Mutation {
-    createActor(countryId: ID!, actor: ActorInput): Actor! @selection
-    createFilm(countryId: ID!, film: FilmInput!): Film!
-    associate(actorId: ID!, filmId: ID!): Boolean!
-    doSingle(single: SingleInput!): Single
+    createCountry(title: String!): Country!
+    createFilm(countryId: ID!, film: FilmInput!, tag: TagInput): Film! @selection
+    createActor(countryId: ID!, actor: ActorInput!, tag: TagInput): Actor! @selection
+    associate(filmId: ID!, actorId: ID!): Boolean!
+    tagFilm(filmId: ID!, tagValue: String!): Boolean!
+    tagActor(actorId: ID!, tagValue: String!): Boolean!
 }
 
-interface Base {
+interface Entity {
     id: ID!
+    fields: JSON!
 }
 
-interface Entity implements Base {
+interface Taggable implements Entity {
     id: ID!
-    createdAt: DateTime! @default
-    updatedAt: DateTime! @default
+    fields: JSON!
+    tags: [Tag!]!
 }
 
-type Country implements Entity, Base {
+
+type Country implements Entity {
     id: ID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    fields: JSON!
 
-    actor(id: ID!): Actor @default
-    actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]! @selection
-    actorsCount(condition: String!, limit: Int = -1, offset: Int = -1): Int @selection
+    name: String! @default
 
+    # Find film by id. Returns null if not found.
     film(id: ID!): Film
-    films(condition: String = "", limit: Int = -1, offset: Int = -1): [Film!]!
 
-    allActorsAndFilms(condition: String = "", limit: Int = -1, offset: Int = -1): [Entity!]! @selection
-
-    season(condition: String, limit: Int, offset: Int): Subject @selection
-}
-
-# актер
-type Actor implements Entity, Base{
-    id: ID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-
-    # имя
-    firstName: String! @required
-    lastName: String! @default
-    middleName: String
-
-    fields: JSON!
-
-    countryId: ID!
-    country: Country!
-
-    # фильмы, в которых учавствовал актер
+    # Find films by title and genre. Returns empty list if not found.
     films(
-        # условие
-        condition: String,
-        # максимальное количество элементов
-        limit: Int! = -1,
-        # сдвиг
-        offset: Int! = -1
-    ): [Film!]! @required
+        # Case sensitive title of film to search
+        title: String,
+        # Genre of film to search
+        genre: Genre,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Film!]! @selection
+
+    # Find actor by id. Returns null if not found.
+    actor(id: ID!): Actor
+
+    # Find actors by firstName, lastName, birthday and gender. Returns empty list if not found.
+    actors(
+        # Case sensitive first name of actor to search
+        firstName: String,
+        # Case sensitive last name of actor to search
+        lastName: String,
+        # Find actors whose birthday is greater than or equal to birthdayFrom
+        birthdayFrom: Date,
+        # Find actors whose birthday is less than or equal to birthdayTo
+        birthdayTo: Date,
+        # Gender of actor to search
+        gender: Gender,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Actor!]! @selection
+
+    # Find entities by tags
+    taggable(tags: [String!]!): [Taggable!]!
+
+    # Find native entities of this country
+    native(
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Native!]! @selection
 }
 
-input ActorInput {
-    firstName: String!
-    lastName: String!
-    middleName: String
-    fields: JSON!
-}
-
-type Film implements Entity, Base {
+type Film implements Entity, Taggable {
     id: ID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    fields: JSON!
+    tags: [Tag!]!
 
-    name: String!
+    title: String! @default
     genre: Genre!
 
     countryId: ID!
     country: Country!
-
-    actors(condition: String = "", limit: Int = -1, offset: Int = -1): [Actor!]!
 }
 
 enum Genre {
@@ -114,18 +160,44 @@ enum Genre {
 
 # входные данные по фильму
 input FilmInput {
-    # имя
-    name: String!
-    # жанр
+    title: String!
     genre: Genre!
 }
 
-type Single {
+# актер
+type Actor implements Entity, Taggable {
     id: ID!
+    fields: JSON!
+    tags: [Tag!]!
+
+    # имя
+    firstName: String! @default
+    lastName: String @default
+    birthday: Date! @required
+    gender: Gender!
+
+    countryId: ID!
+    country: Country!
 }
 
-input SingleInput {
-    id: ID!
+enum Gender {
+    MALE
+    FEMALE
 }
 
-union Subject = Actor | Film
+input ActorInput {
+    firstName: String!
+    lastName: String
+    birthday: Date!
+    gender: Gender!
+}
+
+type Tag {
+    value: String! @required
+}
+
+input TagInput {
+    value: String!
+}
+
+union Native = Actor | Film

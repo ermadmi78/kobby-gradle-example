@@ -7,13 +7,13 @@ description = "Cinema API Example"
 plugins {
     kotlin("jvm")
     `java-library`
-    id("io.github.ermadmi78.kobby") version "1.0.0-alpha.04"
+    id("io.github.ermadmi78.kobby") version "1.0.0-alpha.05"
 }
 
 kobby {
     kotlin {
         scalars = mapOf(
-            "DateTime" to typeOf("java.time", "OffsetDateTime"),
+            "Date" to typeOf("java.time", "LocalDate"),
             "JSON" to typeMap.parameterize(typeString, typeAny.nullable())
         )
     }
