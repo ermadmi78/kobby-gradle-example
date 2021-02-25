@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-rootProject.name = "kobby-gradle-integration-tests"
+rootProject.name = "kobby-gradle-example"
 
 pluginManagement {
     val kotlinVersion: String by settings
@@ -10,4 +10,4 @@ pluginManagement {
     }
 }
 
-include("lib")
+include("cinema-api")
