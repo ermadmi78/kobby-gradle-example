@@ -14,7 +14,7 @@ type Query {
     # Find country by id. Returns null if not found.
     country(id: ID!): Country
 
-    # Find counries by name. Returns empty list if not found.
+    # Find countries by name. Returns empty list if not found.
     countries(
         # Case sensitive name of country to search
         name: String,
@@ -65,36 +65,94 @@ type Query {
 }
 
 type Mutation {
-    createCountry(title: String!): Country!
-    createFilm(countryId: ID!, film: FilmInput!, tag: TagInput): Film! @selection
-    createActor(countryId: ID!, actor: ActorInput!, tag: TagInput): Actor! @selection
-    associate(filmId: ID!, actorId: ID!): Boolean!
-    tagFilm(filmId: ID!, tagValue: String!): Boolean!
-    tagActor(actorId: ID!, tagValue: String!): Boolean!
+    # Create country
+    createCountry(
+        # Title of ne country
+        title: String!
+    ): Country!
+
+    # Create film
+    createFilm(
+        # ID of the country to which the film belongs
+        countryId: ID!,
+
+        # Film input data
+        film: FilmInput!,
+
+        # Add tag to film if tag is not null
+        tag: TagInput
+    ): Film! @selection
+
+    # Create actor
+    createActor(
+        # ID of the country to which the actor belongs
+        countryId: ID!,
+
+        # Actor input data
+        actor: ActorInput!,
+
+        # Add tag to actor if tag is not null
+        tag: TagInput
+    ): Actor! @selection
+
+    # Associate film with actor
+    associate(
+        # ID of film
+        filmId: ID!,
+
+        # ID of actor
+        actorId: ID!
+    ): Boolean!
+
+    # Add tag to film. Returns false if the film already had such a tag
+    tagFilm(
+        # ID of film
+        filmId: ID!,
+
+        # Tag value
+        tagValue: String!
+    ): Boolean!
+
+    # Add tag to actor. Returns false if the actor already had such a tag
+    tagActor(
+        # ID of actor
+        actorId: ID!,
+
+        # Tag value
+        tagValue: String!
+    ): Boolean!
 }
 
+# Base interface for all entities.
 interface Entity {
+    # Unique identifier of entity
     id: ID!
+
+    # All fields of entity in key-value map. Introduced for testing complex scalars.
     fields: JSON!
 }
 
+# Entity with tags. Introduced for testing complex inheritance.
 interface Taggable implements Entity {
     id: ID!
     fields: JSON!
+
+    # Tags of entity
     tags: [Tag!]!
 }
 
-
+# Country entity. The country can be home to several films and several actors.
 type Country implements Entity {
     id: ID!
     fields: JSON!
 
+    # The name of the country
     name: String! @default
 
     # Find film by id. Returns null if not found.
     film(id: ID!): Film
 
-    # Find films by title and genre. Returns empty list if not found.
+    # Find films of country by title and genre. Returns empty list if not found.
     films(
         # Case sensitive title of film to search
         title: String,
@@ -109,7 +167,7 @@ type Country implements Entity {
     # Find actor by id. Returns null if not found.
     actor(id: ID!): Actor
 
-    # Find actors by firstName, lastName, birthday and gender. Returns empty list if not found.
+    # Find actors of country by firstName, lastName, birthday and gender. Returns empty list if not found.
     actors(
         # Case sensitive first name of actor to search
         firstName: String,
@@ -127,7 +185,7 @@ type Country implements Entity {
         offset: Int! = 0
     ): [Actor!]! @selection
 
-    # Find entities by tags
+    # Find entities of this country by tags
     taggable(tags: [String!]!): [Taggable!]!
 
     # Find native entities of this country
@@ -136,68 +194,139 @@ type Country implements Entity {
         limit: Int! = 10,
         # Offset of result list (default 0).
         offset: Int! = 0
-    ): [Native!]! @selection
+    ): [Native!]!
 }
 
+# Film entity. The film belongs to one country and can be played by several actors.
 type Film implements Entity, Taggable {
     id: ID!
     fields: JSON!
     tags: [Tag!]!
 
+    # Title of film
     title: String! @default
+
+    # Genre of film.
     genre: Genre!
 
+    # ID of the country to which the film belongs
     countryId: ID!
+
+    # The country to which the film belongs
     country: Country!
+
+    # Find actors of film by firstName, lastName, birthday and gender. Returns empty list if not found.
+    actors(
+        # Case sensitive first name of actor to search
+        firstName: String,
+        # Case sensitive last name of actor to search
+        lastName: String,
+        # Find actors whose birthday is greater than or equal to birthdayFrom
+        birthdayFrom: Date,
+        # Find actors whose birthday is less than or equal to birthdayTo
+        birthdayTo: Date,
+        # Gender of actor to search
+        gender: Gender,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Actor!]! @selection
 }
 
+# Enum of available film genres
 enum Genre {
+    # Drama
     DRAMA
+
+    # Comedy
     COMEDY
+
+    # Thriller
     THRILLER
+
+    # Horror
     HORROR
 }
 
-# входные данные по фильму
+# Film input data
 input FilmInput {
+    # Title of film
     title: String!
+
+    # Genre of film
     genre: Genre!
 }
 
-# актер
+# Actor entity. The actor belongs to one country and can play in several films.
 type Actor implements Entity, Taggable {
     id: ID!
     fields: JSON!
     tags: [Tag!]!
 
-    # имя
+    # First name of actor. I assume all actors have a first name - so field is not null.
     firstName: String! @default
+
+    # Surname of the actor. This field is nullable because the actor can use an alias and not have a last name.
     lastName: String @default
+
+    # Actor's birthday
     birthday: Date! @required
+
+    # Actor's gender
     gender: Gender!
 
+    # ID of the country to which the actor belongs
     countryId: ID!
+
+    # The country to which the actor belongs
     country: Country!
+
+    # Find films of actor by title and genre. Returns empty list if not found.
+    films(
+        # Case sensitive title of film to search
+        title: String,
+        # Genre of film to search
+        genre: Genre,
+        # Limit of result list (default 10). Put -1 to be unlimited.
+        limit: Int! = 10,
+        # Offset of result list (default 0).
+        offset: Int! = 0
+    ): [Film!]! @selection
 }
 
+# The gender of the actor
 enum Gender {
     MALE
     FEMALE
 }
 
+# Actor input data
 input ActorInput {
+    # First name of actor.
     firstName: String!
+
+    # Surname of the actor. This field is nullable because the actor can use an alias and not have a last name.
     lastName: String
+
+    # Actor's birthday
     birthday: Date!
+
+    # Actor's gender
     gender: Gender!
 }
 
+# Type Tag is introduced for testing types with single value. See class TagDto.
 type Tag {
+    # The tag value
     value: String! @required
 }
 
+# Input TagInput is introduced for testing inputs with single value. See class TagInput.
 input TagInput {
+    # The tag value
     value: String!
 }
 
+# Union of natives
 union Native = Actor | Film

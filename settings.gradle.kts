@@ -12,3 +12,4 @@ pluginManagement {
 }
 
 include("cinema-api")
+include("cinema-server")
