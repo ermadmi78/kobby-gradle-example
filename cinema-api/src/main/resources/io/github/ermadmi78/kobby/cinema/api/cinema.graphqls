@@ -132,7 +132,7 @@ interface Entity {
     fields(
         # List of field keys to load. If no keys specified all entity fields will be loaded.
         keys: [String!]
-    ): JSON!
+    ): JSON! @selection
 }
 
 # Entity with tags. Introduced for testing complex inheritance.
