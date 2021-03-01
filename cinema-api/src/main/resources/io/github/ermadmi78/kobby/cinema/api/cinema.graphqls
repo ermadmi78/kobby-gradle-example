@@ -22,7 +22,7 @@ type Query {
         limit: Int! = 10,
         # Offset of result list (default 0).
         offset: Int! = 0
-    ): [Country!]! @selection
+    ): [Country!]!
 
     # Find film by id. Returns null if not found.
     film(id: ID!): Film
@@ -60,8 +60,8 @@ type Query {
         offset: Int! = 0
     ): [Actor!]! @selection
 
-    # Find entities by tags
-    taggable(tags: [String!]!): [Taggable!]!
+    # Find entities by tag
+    taggable(tag: String!): [Taggable!]!
 }
 
 type Mutation {
@@ -188,8 +188,8 @@ type Country implements Entity {
         offset: Int! = 0
     ): [Actor!]! @selection
 
-    # Find entities of this country by tags
-    taggable(tags: [String!]!): [Taggable!]!
+    # Find entities of this country by tag
+    taggable(tag: String!): [Taggable!]!
 
     # Find native entities of this country
     native(
