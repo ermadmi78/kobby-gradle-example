@@ -1,6 +1,25 @@
+logging:
+  level:
+    org.jooq: info
+
+---
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-  h2:
-    console:
-      enabled: true
+  jooq:
+    sql-dialect: h2
+
+---
+graphql:
+  tools:
+    schema-location-pattern: io/github/ermadmi78/kobby/cinema/api/cinema.graphqls
+
+---
+voyager:
+  enabled: true
+  cdn:
+    enabled: true
+
+---
+graphiql:
+  enabled: true
+  cdn:
+    enabled: true

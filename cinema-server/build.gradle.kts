@@ -30,6 +30,8 @@ val flywaydbVersion: String by project
 val h2Version: String by project
 val jooqVersion: String by project
 val jacksonVersion: String by project
+val graphqlJavaKickstartVersion: String by project
+val graphqlJavaExtendedScalarsVersion: String by project
 
 flyway {
     url = jooqUrl
@@ -127,8 +129,31 @@ buildscript {
 dependencies {
     implementation(project(":cinema-api"))
 
+    implementation(
+        "com.graphql-java-kickstart:" +
+                "graphql-kickstart-spring-boot-starter-webflux:$graphqlJavaKickstartVersion"
+    )
+    implementation(
+        "com.graphql-java-kickstart:" +
+                "graphql-kickstart-spring-boot-starter-tools:$graphqlJavaKickstartVersion"
+    )
+    implementation(
+        "com.graphql-java-kickstart:" +
+                "voyager-spring-boot-starter:$graphqlJavaKickstartVersion"
+    )
+    implementation(
+        "com.graphql-java-kickstart:" +
+                "graphiql-spring-boot-starter:$graphqlJavaKickstartVersion"
+    )
+    implementation(
+        "com.graphql-java:" +
+                "graphql-java-extended-scalars:$graphqlJavaExtendedScalarsVersion"
+    ) {
+        exclude("com.graphql-java", "graphql-java")
+    }
+
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-jooq") {
         exclude("org.jooq", "jooq")
     }
