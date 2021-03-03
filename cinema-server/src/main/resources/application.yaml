@@ -4,6 +4,10 @@ logging:
 
 ---
 spring:
+  flyway:
+    create-schemas: true
+    schemas:
+      - cinema
   jooq:
     sql-dialect: h2
 

@@ -17,6 +17,16 @@ kobby {
     }
 }
 
+val kotlinJvmVersion: String by project
+tasks {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = kotlinJvmVersion
+            freeCompilerArgs = listOf("-Xjsr305=strict")
+        }
+    }
+}
+
 val jacksonVersion: String by project
 dependencies {
     compileOnly("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
