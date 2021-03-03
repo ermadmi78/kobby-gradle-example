@@ -17,3 +17,4 @@ pluginManagement {
 
 include("cinema-api")
 include("cinema-server")
+include("cinema-kotlin-client")
