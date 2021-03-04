@@ -4,7 +4,6 @@ import graphql.kickstart.tools.GraphQLResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Genre
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.TagDto
 import org.springframework.stereotype.Component
 
 /**
@@ -18,8 +17,6 @@ class ActorResolver : GraphQLResolver<ActorDto> {
         actor: ActorDto,
         keys: List<String>?
     ): Map<String, Any?> = TODO()
-
-    suspend fun tags(actor: ActorDto): List<TagDto> = TODO()
 
     suspend fun films(
         actor: ActorDto,

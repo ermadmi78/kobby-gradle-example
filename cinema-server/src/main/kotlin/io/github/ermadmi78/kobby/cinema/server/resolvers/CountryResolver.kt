@@ -2,7 +2,6 @@ package io.github.ermadmi78.kobby.cinema.server.resolvers
 
 import graphql.kickstart.tools.GraphQLResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Taggable
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -50,7 +49,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
     suspend fun taggable(
         country: CountryDto,
         tag: String
-    ): List<Taggable> = TODO()
+    ): List<TaggableDto> = TODO()
 
     suspend fun native(
         country: CountryDto,
