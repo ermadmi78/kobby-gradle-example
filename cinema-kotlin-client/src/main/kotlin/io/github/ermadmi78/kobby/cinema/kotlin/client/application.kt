@@ -44,26 +44,101 @@ class Application : CommandLineRunner {
         }
     }
 
-    override fun run(vararg args: String?) = runBlocking {
+    override fun run(vararg args: String?): Unit = runBlocking {
         val context = cinemaContextOf(CinemaKtorAdapter(httpClient))
 
         println()
+        println("---------------------------------")
         println("Select country by id")
         context.query {
             country(1)
         }.country?.also {
-            println("id=${it.id}, name=${it.name}")
+            println("Country id=${it.id}, name=${it.name}")
+        }
+        println("---------------------------------")
+
+        println()
+        println("---------------------------------")
+        println("Select countries limited by default")
+        context.query {
+            countries()
+        }.countries.forEach {
+            println("Country id=${it.id}, name=${it.name}")
         }
         println("---------------------------------")
 
 
+        println()
+        println("---------------------------------")
+        println("Select countries unlimited")
+        context.query {
+            countries(limit = -1)
+        }.countries.forEach {
+            println("Country id=${it.id}, name=${it.name}")
+        }
+        println("---------------------------------")
+
+        println()
+        println("---------------------------------")
+        println(
+            "Select films and actors of some country whose names contain the symbol 'd' " +
+                    "with related actors and films"
+        )
+        context.query {
+            country(7) {
+                films {
+                    title = "d"
+
+                    genre()
+                    actors {
+                        limit = -1
+                        gender()
+                        country()
+                    }
+                }
+                actors {
+                    firstName = "d"
+
+                    fields {
+                        keys = listOf("birthday", "gender")
+                    }
+                    gender()
+                    films {
+                        limit = -1
+                    }
+                }
+            }
+        }.country!!.also { country ->
+            println("Country: id=${country.id}, name=${country.name}")
+            country.films.forEach { film ->
+                println("Film: id=${film.id}, title='${film.title}', genre=${film.genre}")
+                val actors = film.actors.joinToString {
+                    "${it.firstName} ${it.lastName} (${it.gender.name.toLowerCase()}) of ${it.country.name}"
+                }
+                println("    actors: $actors")
+            }
+            country.actors.forEach { actor ->
+                println(
+                    "Actor: id=${actor.id}, firstName='${actor.firstName}', lastName='${actor.lastName}', " +
+                            "birthday=${actor.birthday}, gender=${actor.gender}, fields=${actor.fields}"
+                )
+                println("    films: ${actor.films.joinToString { it.title }}")
+            }
+        }
+        println("---------------------------------")
+
 //        println()
-//        println("Select countries unlimited")
-//        context.query {
-//            countries(limit = -1)
-//        }.countries.forEach {
-//            println("id=${it.id}, name=${it.name}")
-//        }
 //        println("---------------------------------")
+//        println("Let try to select interfaces")
+//        context.query {
+//            taggable("best") {
+//                __onFilm {
+//                    genre()
+//                }
+//                __onActor {
+//                    gender()
+//                }
+//            }
+//        }
     }
 }

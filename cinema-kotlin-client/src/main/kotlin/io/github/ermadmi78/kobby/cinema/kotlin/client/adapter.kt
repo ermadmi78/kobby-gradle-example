@@ -18,8 +18,8 @@ import io.ktor.client.request.*
 
 class CinemaKtorAdapter(private val client: HttpClient) : CinemaAdapter {
     override suspend fun executeQuery(query: String, variables: Map<String, Any?>): QueryDto {
-        println("Query: $query")
-        println("Variables: $variables")
+        println(">> $query")
+        println(">> $variables")
 
         val request = CinemaRequest(query, variables)
         val result = client.post<CinemaQueryResult> {
@@ -36,8 +36,8 @@ class CinemaKtorAdapter(private val client: HttpClient) : CinemaAdapter {
     }
 
     override suspend fun executeMutation(query: String, variables: Map<String, Any?>): MutationDto {
-        println("Query: $query")
-        println("Variables: $variables")
+        println(">> $query")
+        println(">> $variables")
 
         val request = CinemaRequest(query, variables)
         val result = client.post<CinemaMutationResult> {

@@ -16,7 +16,7 @@ type Query {
 
     # Find countries by name. Returns empty list if not found.
     countries(
-        # Case sensitive name of country to search
+        # Part of name of country to search
         name: String,
         # Limit of result list (default 10). Put -1 to be unlimited.
         limit: Int! = 10,
@@ -29,7 +29,7 @@ type Query {
 
     # Find films by title and genre. Returns empty list if not found.
     films(
-        # Case sensitive title of film to search
+        # Part of title of film to search
         title: String,
         # Genre of film to search
         genre: Genre,
@@ -44,9 +44,9 @@ type Query {
 
     # Find actors by firstName, lastName, birthday and gender. Returns empty list if not found.
     actors(
-        # Case sensitive first name of actor to search
+        # Part of first name of actor to search
         firstName: String,
-        # Case sensitive last name of actor to search
+        # Part of last name of actor to search
         lastName: String,
         # Find actors whose birthday is greater than or equal to birthdayFrom
         birthdayFrom: Date,
@@ -157,7 +157,7 @@ type Country implements Entity {
 
     # Find films of country by title and genre. Returns empty list if not found.
     films(
-        # Case sensitive title of film to search
+        # Part of title of film to search
         title: String,
         # Genre of film to search
         genre: Genre,
@@ -172,9 +172,9 @@ type Country implements Entity {
 
     # Find actors of country by firstName, lastName, birthday and gender. Returns empty list if not found.
     actors(
-        # Case sensitive first name of actor to search
+        # Part of first name of actor to search
         firstName: String,
-        # Case sensitive last name of actor to search
+        # Part of last name of actor to search
         lastName: String,
         # Find actors whose birthday is greater than or equal to birthdayFrom
         birthdayFrom: Date,
@@ -215,9 +215,9 @@ type Film implements Entity, Taggable {
 
     # Find actors of film by firstName, lastName, birthday and gender. Returns empty list if not found.
     actors(
-        # Case sensitive first name of actor to search
+        # Part of first name of actor to search
         firstName: String,
-        # Case sensitive last name of actor to search
+        # Part of last name of actor to search
         lastName: String,
         # Find actors whose birthday is greater than or equal to birthdayFrom
         birthdayFrom: Date,
@@ -283,7 +283,7 @@ type Actor implements Entity, Taggable {
 
     # Find films of actor by title and genre. Returns empty list if not found.
     films(
-        # Case sensitive title of film to search
+        # Part of title of film to search
         title: String,
         # Genre of film to search
         genre: Genre,
