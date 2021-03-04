@@ -2,8 +2,13 @@ package io.github.ermadmi78.kobby.cinema.server.resolvers
 
 import graphql.kickstart.tools.GraphQLResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorDto
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.CountryDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Genre
+import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
+import org.jooq.DSLContext
+import org.jooq.impl.DSL.trueCondition
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
@@ -13,10 +18,34 @@ import org.springframework.stereotype.Component
  */
 @Component
 class ActorResolver : GraphQLResolver<ActorDto> {
+    companion object {
+        private val ALL_FIELDS = setOf("id", "firstName", "lastName", "birthday", "gender")
+    }
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
     suspend fun fields(
         actor: ActorDto,
         keys: List<String>?
-    ): Map<String, Any?> = TODO()
+    ): Map<String, Any?> {
+        val result = mutableMapOf<String, Any?>()
+        (keys?.toSet() ?: ALL_FIELDS).forEach {
+            when (it) {
+                "id" -> result[it] = actor.id
+                "firstName" -> result[it] = actor.firstName
+                "lastName" -> result[it] = actor.lastName
+                "birthday" -> result[it] = actor.birthday
+                "gender" -> result[it] = actor.gender
+            }
+        }
+
+        return result
+    }
+
+    suspend fun country(actor: ActorDto): CountryDto = dslContext.selectFrom(COUNTRY)
+        .where(COUNTRY.ID.eq(actor.countryId))
+        .fetchAny { it.toDto() }!!
 
     suspend fun films(
         actor: ActorDto,
@@ -24,5 +53,14 @@ class ActorResolver : GraphQLResolver<ActorDto> {
         genre: Genre?,
         limit: Int,
         offset: Int
-    ): List<FilmDto> = TODO()
+    ): List<FilmDto> = dslContext.select(FILM.asterisk())
+        .from(FILM)
+        .join(FILM_ACTOR)
+        .onKey()
+        .where(FILM_ACTOR.ACTOR_ID.eq(actor.id))
+        .and(trueCondition().andFilms(title, genre))
+        .limit(offset.prepare(), limit.prepare())
+        .fetch {
+            it.into(FILM).toDto()
+        }
 }

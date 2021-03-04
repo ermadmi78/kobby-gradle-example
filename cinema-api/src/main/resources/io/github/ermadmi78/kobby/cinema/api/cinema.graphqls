@@ -192,12 +192,7 @@ type Country implements Entity {
     taggable(tag: String!): [Taggable!]!
 
     # Find native entities of this country
-    native(
-        # Limit of result list (default 10). Put -1 to be unlimited.
-        limit: Int! = 10,
-        # Offset of result list (default 0).
-        offset: Int! = 0
-    ): [Native!]!
+    native: [Native!]!
 }
 
 # Film entity. The film belongs to one country and can be played by several actors.
