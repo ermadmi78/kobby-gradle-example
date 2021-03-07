@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Actor
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Film
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -50,8 +52,13 @@ class Application : CommandLineRunner {
         println()
         println("---------------------------------")
         println("Select country by id")
+        // query($arg0: ID!) { country(id: $arg0) { id name } }
+        // {arg0=1}
         context.query {
-            country(1)
+            country(1) {
+                // id is required (all fields with type ID! and without arguments are always required)
+                // name is default (see @default annotation in schema)
+            }
         }.country?.also {
             println("Country id=${it.id}, name=${it.name}")
         }
@@ -60,8 +67,12 @@ class Application : CommandLineRunner {
         println()
         println("---------------------------------")
         println("Select countries limited by default")
+        // query { countries { id name } }
         context.query {
-            countries()
+            countries {
+                // id is required
+                // name is default
+            }
         }.countries.forEach {
             println("Country id=${it.id}, name=${it.name}")
         }
@@ -71,8 +82,13 @@ class Application : CommandLineRunner {
         println()
         println("---------------------------------")
         println("Select countries unlimited")
+        // query($arg0: Int!) { countries(limit: $arg0) { id name } }
+        // {arg0=-1}
         context.query {
-            countries(limit = -1)
+            countries(limit = -1) {
+                // id is required
+                // name is default
+            }
         }.countries.forEach {
             println("Country id=${it.id}, name=${it.name}")
         }
@@ -84,27 +100,55 @@ class Application : CommandLineRunner {
             "Select films and actors of some country whose names contain the symbol 'd' " +
                     "with related actors and films"
         )
+        // query($arg0: ID!, $arg1: String, $arg2: Int!, $arg3: String, $arg4: [String!], $arg5: Int!) { country(id: $arg0) { id name films(title: $arg1) { id title genre countryId actors(limit: $arg2) { id firstName lastName birthday gender countryId country { id name } } } actors(firstName: $arg3) { id fields(keys: $arg4) firstName lastName birthday gender countryId films(limit: $arg5) { id title countryId } } } }
+        // {arg0=7, arg1=d, arg2=-1, arg3=d, arg4=[birthday, gender], arg5=-1}
         context.query {
             country(7) {
+                // id is required
+                // name is default
                 films {
-                    title = "d"
+                    title = "d" // title is selection argument (see @selection annotation in schema)
 
+                    // id is required
+                    // title is default
                     genre()
+                    // countryId is required
                     actors {
-                        limit = -1
+                        limit = -1 // limit is selection argument (see @selection annotation in schema)
+
+                        // id is required
+                        // firstName is default
+                        // lastName is default
+                        // birthday is required (see @required annotation in schema)
                         gender()
-                        country()
+                        // countryId is required
+                        country {
+                            // id is required
+                            // name is default
+                        }
                     }
                 }
                 actors {
-                    firstName = "d"
+                    firstName = "d" // firstName is selection argument (see @selection annotation in schema)
 
+                    // id is required
                     fields {
-                        keys = listOf("birthday", "gender")
+                        keys = listOf(
+                            "birthday",
+                            "gender"
+                        ) // keys is selection argument (see @selection annotation in schema)
                     }
+                    // firstName is default
+                    // lastName is default
+                    // birthday is required
                     gender()
+                    // countryId is required
                     films {
-                        limit = -1
+                        limit = -1 // limit is selection argument (see @selection annotation in schema)
+
+                        // id is required
+                        // title is default
+                        // countryId is required
                     }
                 }
             }
@@ -113,7 +157,7 @@ class Application : CommandLineRunner {
             country.films.forEach { film ->
                 println("Film: id=${film.id}, title='${film.title}', genre=${film.genre}")
                 val actors = film.actors.joinToString {
-                    "${it.firstName} ${it.lastName} (${it.gender.name.toLowerCase()}) of ${it.country.name}"
+                    "${it.firstName} ${it.lastName} (${it.gender.name.toLowerCase()}) from ${it.country.name}"
                 }
                 println("    actors: $actors")
             }
@@ -127,18 +171,97 @@ class Application : CommandLineRunner {
         }
         println("---------------------------------")
 
-//        println()
-//        println("---------------------------------")
-//        println("Let try to select interfaces")
-//        context.query {
-//            taggable("best") {
-//                __onFilm {
-//                    genre()
-//                }
-//                __onActor {
-//                    gender()
-//                }
-//            }
-//        }
+        println()
+        println("---------------------------------")
+        println("Let try to select interfaces")
+        // query($arg0: String!) { taggable(tag: $arg0) { id tags { value } __typename ... on Film { title genre countryId } ... on Actor { firstName lastName birthday gender countryId country { id name } } } }
+        // {arg0=best}
+        context.query {
+            taggable("best") {
+                // id is default
+                tags {
+                    value()
+                }
+                // __typename generated by Kobby
+                __onFilm {
+                    // title is default
+                    genre()
+                    // countryId is required
+                }
+                __onActor {
+                    // firstName is default
+                    // lastName is default
+                    // birthday is required
+                    gender()
+                    // countryId is required
+                    country {
+                        // id is required
+                        // name is default
+                    }
+                }
+            }
+        }.taggable.forEach { cur ->
+            val tags = cur.tags.joinToString { it.value }
+            when (cur) {
+                is Film -> {
+                    println("Film[$tags]: id=${cur.id}, title='${cur.title}' genre=${cur.genre}")
+                }
+                is Actor -> {
+                    println(
+                        "Actor[$tags]: ${cur.firstName} ${cur.lastName} (${cur.gender.name.toLowerCase()}) " +
+                                "from ${cur.country.name}"
+                    )
+                }
+                else -> error("Invalid algorithm")
+            }
+        }
+        println("---------------------------------")
+
+        println()
+        println("---------------------------------")
+        println("Let try to select unions")
+        // query($arg0: ID!) { country(id: $arg0) { id native { __typename ... on Film { id title genre countryId } ... on Actor { id firstName lastName birthday gender countryId country { id name } } } } }
+        // {arg0=17}
+        context.query {
+            country(17) {
+                __minimize() // switch off defaults to minimize query
+                // id is required
+                native {
+                    // __typename generated by Kobby
+                    __onFilm {
+                        // id is required
+                        // title is default
+                        genre()
+                        // countryId is required
+                    }
+                    __onActor {
+                        // id is required
+                        // firstName is default
+                        // lastName is default
+                        // birthday is required
+                        gender()
+                        // countryId is required
+                        country {
+                            // id is required
+                            // name is default
+                        }
+                    }
+                }
+            }
+        }.country!!.native.forEach { cur ->
+            when (cur) {
+                is Film -> {
+                    println("Film: id=${cur.id}, title='${cur.title}' genre=${cur.genre}")
+                }
+                is Actor -> {
+                    println(
+                        "Actor: ${cur.firstName} ${cur.lastName} (${cur.gender.name.toLowerCase()}) " +
+                                "from ${cur.country.name}"
+                    )
+                }
+                else -> error("Invalid algorithm")
+            }
+        }
+        println("---------------------------------")
     }
 }

@@ -318,7 +318,7 @@ input ActorInput {
 # Type Tag is introduced for testing types with single value. See class TagDto.
 type Tag {
     # The tag value
-    value: String! @required
+    value: String!
 }
 
 # Input TagInput is introduced for testing inputs with single value. See class TagInput.
