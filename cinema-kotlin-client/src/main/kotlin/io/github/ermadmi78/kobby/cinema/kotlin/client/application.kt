@@ -3,9 +3,13 @@ package io.github.ermadmi78.kobby.cinema.kotlin.client
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.CinemaContext
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Actor
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Film
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.fetchFilm
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchCountry
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchFilm
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -263,5 +267,11 @@ class Application : CommandLineRunner {
             }
         }
         println("---------------------------------")
+
+        // sugar API
+        val country = context.fetchCountry(7)
+
+        country.fetchFilm(2)
+        (country as CinemaContext).fetchFilm(2)
     }
 }
