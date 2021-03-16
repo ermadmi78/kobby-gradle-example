@@ -19,3 +19,7 @@ suspend fun Country.findFilm(id: Long, __projection: FilmProjection.() -> Unit =
 
 suspend fun Country.fetchFilm(id: Long, __projection: FilmProjection.() -> Unit = {}): Film =
     findFilm(id, __projection)!!
+
+suspend fun Country.findFilms(__query: CountryFilmsQuery.() -> Unit = {}): List<Film> = refresh {
+    films(__query)
+}.films
