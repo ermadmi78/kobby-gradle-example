@@ -21,5 +21,6 @@ suspend fun Country.fetchFilm(id: Long, __projection: FilmProjection.() -> Unit 
     findFilm(id, __projection)!!
 
 suspend fun Country.findFilms(__query: CountryFilmsQuery.() -> Unit = {}): List<Film> = refresh {
+    __minimize()
     films(__query)
 }.films
