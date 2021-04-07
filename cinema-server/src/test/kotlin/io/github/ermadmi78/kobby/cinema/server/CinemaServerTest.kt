@@ -9,6 +9,7 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.spring.SpringListener
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +24,7 @@ class CinemaServerTest : AnnotationSpec() {
     lateinit var applicationContext: ApplicationContext
 
     lateinit var cinemaContext: CinemaContext
+
 
     override fun listeners() = listOf(SpringListener)
 
@@ -51,6 +53,35 @@ class CinemaServerTest : AnnotationSpec() {
 
         shouldThrow<IllegalStateException> {
             country.fields
+        }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
+    }
+
+    @Test
+    fun actorFirst() = runBlocking {
+        val actor = cinemaContext.query {
+            actor(0)
+        }.actor !!
+
+        actor.id shouldBe 0
+        actor.firstName shouldBe  "Audrey"
+
+        shouldThrow<IllegalStateException> {
+            actor.fields
+        }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
+    }
+
+
+    @Test
+    fun actorSecond() = runBlocking {
+        val actor = cinemaContext.query {
+            actor(2)
+        }.actor !!
+
+        actor.id shouldNotBe  0
+        actor.firstName shouldBe  "Jamel"
+
+        shouldThrow<IllegalStateException> {
+            actor.fields
         }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
     }
 }
