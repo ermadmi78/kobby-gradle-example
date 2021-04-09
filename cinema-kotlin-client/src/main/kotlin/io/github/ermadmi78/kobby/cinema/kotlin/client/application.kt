@@ -58,7 +58,7 @@ class Application : CommandLineRunner {
         // {arg0=1}
         context.query {
             country(1) {
-                // id is required (all fields with type ID! and without arguments are always required)
+                // id is required (see @required annotation in schema)
                 // name is default (see @default annotation in schema)
             }
         }.country?.also {

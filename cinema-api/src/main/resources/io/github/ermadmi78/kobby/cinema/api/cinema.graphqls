@@ -126,7 +126,7 @@ type Mutation {
 # Base interface for all entities.
 interface Entity {
     # Unique identifier of entity
-    id: ID!
+    id: ID! @required
 
     # Fields of entity in key-value map. Introduced for testing complex scalars.
     fields(
@@ -208,7 +208,7 @@ type Film implements Entity, Taggable {
     genre: Genre!
 
     # ID of the country to which the film belongs
-    countryId: ID!
+    countryId: ID! @required
 
     # The country to which the film belongs
     country: Country!
@@ -253,7 +253,7 @@ input FilmInput {
     title: String!
 
     # Genre of film
-    genre: Genre!
+    genre: Genre! = DRAMA
 }
 
 # Actor entity. The actor belongs to one country and can play in several films.
@@ -276,7 +276,7 @@ type Actor implements Entity, Taggable {
     gender: Gender!
 
     # ID of the country to which the actor belongs
-    countryId: ID!
+    countryId: ID! @required
 
     # The country to which the actor belongs
     country: Country!
