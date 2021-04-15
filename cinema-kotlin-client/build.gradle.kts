@@ -15,6 +15,7 @@ val kotlinJvmVersion: String by project
 val kotlinVersion: String by project
 val kotestVersion: String by project
 val jacksonVersion: String by project
+val ktorVersion: String by project
 
 tasks {
     withType<KotlinCompile> {
@@ -43,10 +44,10 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
 
-    implementation("io.ktor:ktor-client-cio:1.5.2")
-    implementation("io.ktor:ktor-client-jackson:1.5.2")
-    implementation("io.ktor:ktor-client-auth-jvm:1.5.2")
-    implementation("io.ktor:ktor-client-logging-jvm:1.5.2")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
 
     implementation(kotlin("stdlib", kotlinVersion))
     implementation(kotlin("reflect", kotlinVersion))
