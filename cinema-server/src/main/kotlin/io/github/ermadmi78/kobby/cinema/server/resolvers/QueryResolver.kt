@@ -3,11 +3,20 @@ package io.github.ermadmi78.kobby.cinema.server.resolvers
 import graphql.kickstart.tools.GraphQLQueryResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
+import io.github.ermadmi78.kobby.cinema.server.security.getAuthentication
+import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.reactor.flux
+import kotlinx.coroutines.reactor.mono
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.time.LocalDate
 
 /**
@@ -16,48 +25,78 @@ import java.time.LocalDate
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class QueryResolver : GraphQLQueryResolver {
+@ExperimentalCoroutinesApi
+class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : GraphQLQueryResolver {
     @Autowired
     private lateinit var dslContext: DSLContext
 
-    suspend fun country(id: Long): CountryDto? = dslContext.selectFrom(COUNTRY)
-        .where(COUNTRY.ID.eq(id))
-        .fetchAny { it.toDto() }
+    /**
+     * Coroutine based resolver authorization example
+     */
+    suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
+        println("Query country by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+        dslContext.selectFrom(COUNTRY)
+            .where(COUNTRY.ID.eq(id))
+            .fetchAny { it.toDto() }
+    }
 
-    suspend fun countries(
+    /**
+     * Flux based resolver authorization example
+     */
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    fun countries(
         name: String?,
         limit: Int,
         offset: Int
-    ): List<CountryDto> {
+    ): Flux<CountryDto> = flux(resolverDispatcher) {
+        val authentication = getAuthentication()!!
+        println("Query countries by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+
         var condition: Condition = trueCondition()
 
         if (!name.isNullOrBlank()) {
             condition = condition.and(COUNTRY.NAME.containsIgnoreCase(name.trim()))
         }
 
-        return dslContext.selectFrom(COUNTRY)
+        dslContext.selectFrom(COUNTRY)
             .where(condition)
             .limit(offset.prepare(), limit.prepare())
             .fetch { it.toDto() }
+            .forEach {
+                send(it)
+            }
     }
 
-    suspend fun film(id: Long): FilmDto? = dslContext.selectFrom(FILM)
-        .where(FILM.ID.eq(id))
-        .fetchAny { it.toDto() }
+    /**
+     * Mono based resolver authorization example
+     */
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
+        val authentication = getAuthentication()!!
+        println("Query film by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+
+        dslContext.selectFrom(FILM)
+            .where(FILM.ID.eq(id))
+            .fetchAny { it.toDto() }
+    }
 
     suspend fun films(
         title: String?,
         genre: Genre?,
         limit: Int,
         offset: Int
-    ): List<FilmDto> = dslContext.selectFrom(FILM)
-        .where(trueCondition().andFilms(title, genre))
-        .limit(offset.prepare(), limit.prepare())
-        .fetch { it.toDto() }
+    ): List<FilmDto> = hasAnyRole("USER", "ADMIN") {
+        dslContext.selectFrom(FILM)
+            .where(trueCondition().andFilms(title, genre))
+            .limit(offset.prepare(), limit.prepare())
+            .fetch { it.toDto() }
+    }
 
-    suspend fun actor(id: Long): ActorDto? = dslContext.selectFrom(ACTOR)
-        .where(ACTOR.ID.eq(id))
-        .fetchAny { it.toDto() }
+    suspend fun actor(id: Long): ActorDto? = hasAnyRole("USER", "ADMIN") {
+        dslContext.selectFrom(ACTOR)
+            .where(ACTOR.ID.eq(id))
+            .fetchAny { it.toDto() }
+    }
 
     suspend fun actors(
         firstName: String?,
@@ -67,12 +106,14 @@ class QueryResolver : GraphQLQueryResolver {
         gender: Gender?,
         limit: Int,
         offset: Int
-    ): List<ActorDto> = dslContext.selectFrom(ACTOR)
-        .where(trueCondition().andActors(firstName, lastName, birthdayFrom, birthdayTo, gender))
-        .limit(offset.prepare(), limit.prepare())
-        .fetch { it.toDto() }
+    ): List<ActorDto> = hasAnyRole("USER", "ADMIN") {
+        dslContext.selectFrom(ACTOR)
+            .where(trueCondition().andActors(firstName, lastName, birthdayFrom, birthdayTo, gender))
+            .limit(offset.prepare(), limit.prepare())
+            .fetch { it.toDto() }
+    }
 
-    suspend fun taggable(tag: String): List<TaggableDto> {
+    suspend fun taggable(tag: String): List<TaggableDto> = hasAnyRole("USER", "ADMIN") {
         val result = mutableListOf<TaggableDto>()
 
         dslContext.selectFrom(FILM).where(filmTagsContains(tag)).forEach {
@@ -83,6 +124,6 @@ class QueryResolver : GraphQLQueryResolver {
             result.add(it.toDto())
         }
 
-        return result
+        result
     }
 }

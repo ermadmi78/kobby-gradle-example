@@ -6,6 +6,7 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.CountryDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Genre
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
+import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,9 +44,11 @@ class ActorResolver : GraphQLResolver<ActorDto> {
         return result
     }
 
-    suspend fun country(actor: ActorDto): CountryDto = dslContext.selectFrom(COUNTRY)
-        .where(COUNTRY.ID.eq(actor.countryId))
-        .fetchAny { it.toDto() }!!
+    suspend fun country(actor: ActorDto): CountryDto = hasAnyRole("USER", "ADMIN") {
+        dslContext.selectFrom(COUNTRY)
+            .where(COUNTRY.ID.eq(actor.countryId))
+            .fetchAny { it.toDto() }!!
+    }
 
     suspend fun films(
         actor: ActorDto,
@@ -53,14 +56,16 @@ class ActorResolver : GraphQLResolver<ActorDto> {
         genre: Genre?,
         limit: Int,
         offset: Int
-    ): List<FilmDto> = dslContext.select(FILM.asterisk())
-        .from(FILM)
-        .join(FILM_ACTOR)
-        .onKey()
-        .where(FILM_ACTOR.ACTOR_ID.eq(actor.id))
-        .and(trueCondition().andFilms(title, genre))
-        .limit(offset.prepare(), limit.prepare())
-        .fetch {
-            it.into(FILM).toDto()
-        }
+    ): List<FilmDto> = hasAnyRole("USER", "ADMIN") {
+        dslContext.select(FILM.asterisk())
+            .from(FILM)
+            .join(FILM_ACTOR)
+            .onKey()
+            .where(FILM_ACTOR.ACTOR_ID.eq(actor.id))
+            .and(trueCondition().andFilms(title, genre))
+            .limit(offset.prepare(), limit.prepare())
+            .fetch {
+                it.into(FILM).toDto()
+            }
+    }
 }

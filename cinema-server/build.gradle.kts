@@ -25,11 +25,13 @@ val jooqPassword = ""
 
 val kotlinJvmVersion: String by project
 val kotlinVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 val kotestVersion: String by project
 val flywaydbVersion: String by project
 val h2Version: String by project
 val jooqVersion: String by project
 val jacksonVersion: String by project
+val commonsLang3Version: String by project
 val graphqlJavaKickstartVersion: String by project
 val graphqlJavaExtendedScalarsVersion: String by project
 
@@ -44,7 +46,7 @@ tasks {
     withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = kotlinJvmVersion
-            freeCompilerArgs = listOf("-Xjsr305=strict")
+            freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
         }
     }
 
@@ -139,10 +141,6 @@ dependencies {
     )
     implementation(
         "com.graphql-java-kickstart:" +
-                "voyager-spring-boot-starter:$graphqlJavaKickstartVersion"
-    )
-    implementation(
-        "com.graphql-java-kickstart:" +
                 "graphiql-spring-boot-starter:$graphqlJavaKickstartVersion"
     )
     implementation(
@@ -154,6 +152,7 @@ dependencies {
 
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-jooq") {
         exclude("org.jooq", "jooq")
@@ -164,11 +163,15 @@ dependencies {
     implementation("com.h2database:h2:$h2Version")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
 
     implementation(kotlin("stdlib", kotlinVersion))
     implementation(kotlin("reflect", kotlinVersion))
     testImplementation(kotlin("test", kotlinVersion))
     testImplementation(kotlin("test-junit5", kotlinVersion))
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinxCoroutinesVersion")
 
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")

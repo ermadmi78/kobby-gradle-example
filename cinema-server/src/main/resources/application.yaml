@@ -20,13 +20,9 @@ graphql:
     schema-location-pattern: io/github/ermadmi78/kobby/cinema/api/cinema.graphqls
 
 ---
-voyager:
-  enabled: true
-  cdn:
-    enabled: true
-
----
 graphiql:
   enabled: true
   cdn:
     enabled: false
+  headers:
+    Authorization: Basic YWRtaW46YWRtaW4=

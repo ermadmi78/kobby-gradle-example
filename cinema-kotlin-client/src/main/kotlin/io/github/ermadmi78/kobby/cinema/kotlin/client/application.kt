@@ -10,6 +10,8 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.findFilms
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchCountry
 import io.ktor.client.*
 import io.ktor.client.features.*
+import io.ktor.client.features.auth.*
+import io.ktor.client.features.auth.providers.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.logging.*
 import io.ktor.http.*
@@ -32,6 +34,12 @@ fun main(args: Array<String>) {
 class Application : CommandLineRunner {
     private val httpClient = HttpClient {
         expectSuccess = true
+        Auth {
+            basic {
+                username = "admin"
+                password = "admin"
+            }
+        }
         install(JsonFeature) {
             serializer = JacksonSerializer() {
                 registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
@@ -51,6 +59,8 @@ class Application : CommandLineRunner {
     override fun run(vararg args: String?): Unit = runBlocking {
         val context = cinemaContextOf(CinemaKtorAdapter(httpClient))
 
+        //**************************************************************************************************************
+
         println()
         println("---------------------------------")
         println("Select country by id")
@@ -66,6 +76,8 @@ class Application : CommandLineRunner {
         }
         println("---------------------------------")
 
+        //**************************************************************************************************************
+
         println()
         println("---------------------------------")
         println("Select countries limited by default")
@@ -80,6 +92,25 @@ class Application : CommandLineRunner {
         }
         println("---------------------------------")
 
+        //**************************************************************************************************************
+
+        println()
+        println("---------------------------------")
+        println("Select film by id")
+        // query($arg0: ID!) { film(id: $arg0) { id title countryId } }
+        // {arg0=0}
+        context.query {
+            film(0) {
+                // id is required
+                // title is default
+                // countryId is required
+            }
+        }.film?.also {
+            println("Film id=${it.id}, title=${it.title}")
+        }
+        println("---------------------------------")
+
+        //**************************************************************************************************************
 
         println()
         println("---------------------------------")
@@ -96,6 +127,8 @@ class Application : CommandLineRunner {
         }
         println("---------------------------------")
 
+        //**************************************************************************************************************
+
         println()
         println("---------------------------------")
         println(
@@ -109,19 +142,19 @@ class Application : CommandLineRunner {
                 // id is required
                 // name is default
                 films {
-                    title = "d" // title is selection argument (see @selection annotation in schema)
+                    title = "d" // title is selection argument (see @selection directive in schema)
 
                     // id is required
                     // title is default
                     genre()
                     // countryId is required
                     actors {
-                        limit = -1 // limit is selection argument (see @selection annotation in schema)
+                        limit = -1 // limit is selection argument (see @selection directive in schema)
 
                         // id is required
                         // firstName is default
                         // lastName is default
-                        // birthday is required (see @required annotation in schema)
+                        // birthday is required (see @required directive in schema)
                         gender()
                         // countryId is required
                         country {
@@ -131,14 +164,14 @@ class Application : CommandLineRunner {
                     }
                 }
                 actors {
-                    firstName = "d" // firstName is selection argument (see @selection annotation in schema)
+                    firstName = "d" // firstName is selection argument (see @selection directive in schema)
 
                     // id is required
                     fields {
                         keys = listOf(
                             "birthday",
                             "gender"
-                        ) // keys is selection argument (see @selection annotation in schema)
+                        ) // keys is selection argument (see @selection directive in schema)
                     }
                     // firstName is default
                     // lastName is default
@@ -146,7 +179,7 @@ class Application : CommandLineRunner {
                     gender()
                     // countryId is required
                     films {
-                        limit = -1 // limit is selection argument (see @selection annotation in schema)
+                        limit = -1 // limit is selection argument (see @selection directive in schema)
 
                         // id is required
                         // title is default
@@ -172,6 +205,8 @@ class Application : CommandLineRunner {
             }
         }
         println("---------------------------------")
+
+        //**************************************************************************************************************
 
         println()
         println("---------------------------------")
@@ -218,6 +253,8 @@ class Application : CommandLineRunner {
             }
         }
         println("---------------------------------")
+
+        //**************************************************************************************************************
 
         println()
         println("---------------------------------")
@@ -266,7 +303,9 @@ class Application : CommandLineRunner {
         }
         println("---------------------------------")
 
-        // sugar API
+        //**************************************************************************************************************
+        //                                                 Sugar API
+        //**************************************************************************************************************
         println()
         println("---------------------------------")
         println("Let try our sugar API")

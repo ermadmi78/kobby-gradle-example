@@ -22,6 +22,7 @@ class CinemaTestAdapter(
             .uri("/graphql")
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Basic YWRtaW46YWRtaW4=")
             .bodyValue(request)
             .exchange()
             .expectStatus().isOk
@@ -46,6 +47,7 @@ class CinemaTestAdapter(
             .uri("/graphql")
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Basic YWRtaW46YWRtaW4=")
             .bodyValue(request)
             .exchange()
             .expectStatus().isOk

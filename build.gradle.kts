@@ -15,7 +15,7 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()
+        jcenter() // todo: need for dependency graphql-java-extended-scalars
     }
 }
 

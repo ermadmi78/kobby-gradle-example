@@ -2,6 +2,7 @@ package io.github.ermadmi78.kobby.cinema.server.resolvers
 
 import graphql.kickstart.tools.GraphQLMutationResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
+import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.springframework.stereotype.Component
 
 /**
@@ -11,15 +12,27 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MutationResolver : GraphQLMutationResolver {
-    suspend fun createCountry(title: String): CountryDto = TODO()
+    suspend fun createCountry(title: String): CountryDto = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 
-    suspend fun createFilm(countryId: Long, film: FilmInput, tag: TagInput?): FilmDto = TODO()
+    suspend fun createFilm(countryId: Long, film: FilmInput, tag: TagInput?): FilmDto = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 
-    suspend fun createActor(countryId: Long, actor: ActorInput, tag: TagInput?): ActorDto = TODO()
+    suspend fun createActor(countryId: Long, actor: ActorInput, tag: TagInput?): ActorDto = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 
-    suspend fun associate(filmId: Long, actorId: Long): Boolean = TODO()
+    suspend fun associate(filmId: Long, actorId: Long): Boolean = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 
-    suspend fun tagFilm(filmId: Long, tagValue: String): Boolean = TODO()
+    suspend fun tagFilm(filmId: Long, tagValue: String): Boolean = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 
-    suspend fun tagActor(actorId: Long, tagValue: String): Boolean = TODO()
+    suspend fun tagActor(actorId: Long, tagValue: String): Boolean = hasAnyRole("ADMIN") {
+        TODO("Not implemented yet")
+    }
 }
