@@ -1,6 +1,9 @@
 logging:
   level:
-    org.jooq: info
+    org:
+      jooq: info
+      springframework:
+        web: info
 
 ---
 spring:
@@ -26,4 +29,4 @@ voyager:
 graphiql:
   enabled: true
   cdn:
-    enabled: true
+    enabled: false
