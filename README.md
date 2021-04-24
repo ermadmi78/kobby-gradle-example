@@ -14,52 +14,52 @@ See example of GraphQL resolvers authorization [here](https://github.com/ermadmi
 
 **Coroutine based resolver authorization example:**
 ```kotlin
-    suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
-        println("Query country by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
-        dslContext.selectFrom(COUNTRY)
-            .where(COUNTRY.ID.eq(id))
-            .fetchAny { it.toDto() }
-    }
+suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
+    println("Query country by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+    dslContext.selectFrom(COUNTRY)
+        .where(COUNTRY.ID.eq(id))
+        .fetchAny { it.toDto() }
+}
 ```
 
 **Mono based resolver authorization example:**
 ```kotlin
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
-        val authentication = getAuthentication()!!
-        println("Query film by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
+    val authentication = getAuthentication()!!
+    println("Query film by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
 
-        dslContext.selectFrom(FILM)
-            .where(FILM.ID.eq(id))
-            .fetchAny { it.toDto() }
-    }
+    dslContext.selectFrom(FILM)
+        .where(FILM.ID.eq(id))
+        .fetchAny { it.toDto() }
+}
 ```
 
 **Flux based resolver authorization example:**
 ```kotlin
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    fun countries(
-        name: String?,
-        limit: Int,
-        offset: Int
-    ): Flux<CountryDto> = flux(resolverDispatcher) {
-        val authentication = getAuthentication()!!
-        println("Query countries by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+fun countries(
+    name: String?,
+    limit: Int,
+    offset: Int
+): Flux<CountryDto> = flux(resolverDispatcher) {
+    val authentication = getAuthentication()!!
+    println("Query countries by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
 
-        var condition: Condition = trueCondition()
+    var condition: Condition = trueCondition()
 
-        if (!name.isNullOrBlank()) {
-            condition = condition.and(COUNTRY.NAME.containsIgnoreCase(name.trim()))
-        }
-
-        dslContext.selectFrom(COUNTRY)
-            .where(condition)
-            .limit(offset.prepare(), limit.prepare())
-            .fetch { it.toDto() }
-            .forEach {
-                send(it)
-            }
+    if (!name.isNullOrBlank()) {
+        condition = condition.and(COUNTRY.NAME.containsIgnoreCase(name.trim()))
     }
+
+    dslContext.selectFrom(COUNTRY)
+        .where(condition)
+        .limit(offset.prepare(), limit.prepare())
+        .fetch { it.toDto() }
+        .forEach {
+            send(it)
+        }
+}
 ```
 
 ## Kotlin Client GraphQL DSL support
