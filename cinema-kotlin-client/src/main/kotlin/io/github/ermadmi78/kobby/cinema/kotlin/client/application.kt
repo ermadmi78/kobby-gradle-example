@@ -68,8 +68,8 @@ class Application : CommandLineRunner {
         // {arg0=1}
         context.query {
             country(1) {
-                // id is primary key (see @primaryKey annotation in schema)
-                // name is default (see @default annotation in schema)
+                // id is primary key (see @primaryKey directive in schema)
+                // name is default (see @default directive in schema)
             }
         }.country?.also {
             println("Country id=${it.id}, name=${it.name}")
