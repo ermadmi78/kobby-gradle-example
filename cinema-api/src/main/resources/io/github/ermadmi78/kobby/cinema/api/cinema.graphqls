@@ -1,3 +1,4 @@
+directive @primaryKey on FIELD_DEFINITION
 directive @required on FIELD_DEFINITION
 directive @default on FIELD_DEFINITION
 directive @selection on FIELD_DEFINITION
@@ -126,7 +127,7 @@ type Mutation {
 # Base interface for all entities.
 interface Entity {
     # Unique identifier of entity
-    id: ID! @required
+    id: ID! @primaryKey
 
     # Fields of entity in key-value map. Introduced for testing complex scalars.
     fields(
@@ -275,8 +276,8 @@ type Actor implements Entity, Taggable {
     # Actor's gender
     gender: Gender!
 
-    # ID of the country to which the actor belongs
-    countryId: ID! @required
+    # ID of the country to which the actor belongs (@primaryKey added to test complex primary keys)
+    countryId: ID! @primaryKey
 
     # The country to which the actor belongs
     country: Country!
