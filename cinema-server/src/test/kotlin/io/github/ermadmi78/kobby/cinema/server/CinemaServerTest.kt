@@ -19,7 +19,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.*
 
 /**
- * Install Kotest plugin to start tests from IntelliJ IDEA
+ * Install Kotest plugin to run tests from IntelliJ IDEA
  * https://plugins.jetbrains.com/plugin/14080-kotest
  */
 @SpringBootTest(classes = [Application::class])
