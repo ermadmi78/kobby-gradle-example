@@ -12,6 +12,8 @@
 
 See example of GraphQL resolvers authorization [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/main/kotlin/io/github/ermadmi78/kobby/cinema/server/resolvers/QueryResolver.kt)
 
+See example of GraphQL server integration tests [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaServerTest.kt)
+
 **Coroutine based resolver authorization example:**
 ```kotlin
 suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
