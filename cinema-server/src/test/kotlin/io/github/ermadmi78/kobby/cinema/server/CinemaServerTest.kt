@@ -18,6 +18,10 @@ import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.*
 
+/**
+ * Install Kotest plugin to start tests from IntelliJ IDEA
+ * https://plugins.jetbrains.com/plugin/14080-kotest
+ */
 @SpringBootTest(classes = [Application::class])
 class CinemaServerTest : AnnotationSpec() {
     @Autowired
@@ -60,10 +64,10 @@ class CinemaServerTest : AnnotationSpec() {
     fun actorFirst() = runBlocking {
         val actor = cinemaContext.query {
             actor(0)
-        }.actor !!
+        }.actor!!
 
         actor.id shouldBe 0
-        actor.firstName shouldBe  "Audrey"
+        actor.firstName shouldBe "Audrey"
 
         shouldThrow<IllegalStateException> {
             actor.fields
@@ -75,10 +79,10 @@ class CinemaServerTest : AnnotationSpec() {
     fun actorSecond() = runBlocking {
         val actor = cinemaContext.query {
             actor(2)
-        }.actor !!
+        }.actor!!
 
-        actor.id shouldNotBe  0
-        actor.firstName shouldBe  "Jamel"
+        actor.id shouldNotBe 0
+        actor.firstName shouldBe "Jamel"
 
         shouldThrow<IllegalStateException> {
             actor.fields
