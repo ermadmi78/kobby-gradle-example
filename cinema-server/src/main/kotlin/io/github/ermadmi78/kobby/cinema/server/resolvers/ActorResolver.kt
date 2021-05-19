@@ -1,10 +1,10 @@
 package io.github.ermadmi78.kobby.cinema.server.resolvers
 
-import graphql.kickstart.tools.GraphQLResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.CountryDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Genre
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaActorResolver
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class ActorResolver : GraphQLResolver<ActorDto> {
+class ActorResolver : CinemaActorResolver {
     companion object {
         private val ALL_FIELDS = setOf("id", "firstName", "lastName", "birthday", "gender")
     }
@@ -26,7 +26,7 @@ class ActorResolver : GraphQLResolver<ActorDto> {
     @Autowired
     private lateinit var dslContext: DSLContext
 
-    suspend fun fields(
+    override suspend fun fields(
         actor: ActorDto,
         keys: List<String>?
     ): Map<String, Any?> {
@@ -44,13 +44,13 @@ class ActorResolver : GraphQLResolver<ActorDto> {
         return result
     }
 
-    suspend fun country(actor: ActorDto): CountryDto = hasAnyRole("USER", "ADMIN") {
+    override suspend fun country(actor: ActorDto): CountryDto = hasAnyRole("USER", "ADMIN") {
         dslContext.selectFrom(COUNTRY)
             .where(COUNTRY.ID.eq(actor.countryId))
             .fetchAny { it.toDto() }!!
     }
 
-    suspend fun films(
+    override suspend fun films(
         actor: ActorDto,
         title: String?,
         genre: Genre?,

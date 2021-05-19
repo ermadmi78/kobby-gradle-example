@@ -5,7 +5,7 @@ description = "Cinema API Example"
 plugins {
     kotlin("jvm")
     `java-library`
-    id("io.github.ermadmi78.kobby") version "1.0.0-beta.02"
+    id("io.github.ermadmi78.kobby") version "1.0.0-beta.04"
 }
 
 kobby {
@@ -28,6 +28,16 @@ tasks {
 }
 
 val jacksonVersion: String by project
+val graphqlJavaKickstartVersion: String by project
+val kotlinVersion: String by project
 dependencies {
+    // Add this dependency to enable Jackson annotation generation in DTO classes by Kobby
     compileOnly("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+
+    // Add this dependency to enable graphql-java-kickstart resolvers generation by Kobby
+    compileOnly("com.graphql-java-kickstart:graphql-java-tools:$graphqlJavaKickstartVersion")
+
+    // Add this dependencies to remove warning "Runtime JAR files in the classpath should have the same version"
+    compileOnly(kotlin("stdlib", kotlinVersion))
+    compileOnly(kotlin("reflect", kotlinVersion))
 }

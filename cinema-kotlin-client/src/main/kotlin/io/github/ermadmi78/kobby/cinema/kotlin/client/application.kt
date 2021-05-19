@@ -1,6 +1,7 @@
 package io.github.ermadmi78.kobby.cinema.kotlin.client
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
@@ -19,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import java.time.LocalDate
 
 /**
  * Created on 03.03.2021
@@ -41,9 +43,11 @@ class Application : CommandLineRunner {
             }
         }
         install(JsonFeature) {
-            serializer = JacksonSerializer() {
+            serializer = JacksonSerializer {
                 registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
                 registerModule(JavaTimeModule())
+                // Force Jackson to serialize dates as String
+                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             }
         }
         install(Logging) {
@@ -135,8 +139,8 @@ class Application : CommandLineRunner {
             "Select films and actors of some country whose names contain the symbol 'd' " +
                     "with related actors and films"
         )
-        // query($arg0: ID!, $arg1: String, $arg2: Int!, $arg3: String, $arg4: [String!], $arg5: Int!) { country(id: $arg0) { id name films(title: $arg1) { id title genre countryId actors(limit: $arg2) { id firstName lastName birthday gender countryId country { id name } } } actors(firstName: $arg3) { id fields(keys: $arg4) firstName lastName birthday gender countryId films(limit: $arg5) { id title countryId } } } }
-        // {arg0=7, arg1=d, arg2=-1, arg3=d, arg4=[birthday, gender], arg5=-1}
+        // query($arg0: ID!, $arg1: String, $arg2: Int!, $arg3: String, $arg4: Date, $arg5: [String!], $arg6: Int!) { country(id: $arg0) { id name films(title: $arg1) { id title genre countryId actors(limit: $arg2) { id firstName lastName birthday gender countryId country { id name } } } actors(firstName: $arg3, birthdayFrom: $arg4) { id fields(keys: $arg5) firstName lastName birthday gender countryId films(limit: $arg6) { id title countryId } } } }
+        // {arg0=7, arg1=d, arg2=-1, arg3=d, arg4=1970-01-01, arg5=[birthday, gender], arg6=-1}
         context.query {
             country(7) {
                 // id is primary key
@@ -165,6 +169,9 @@ class Application : CommandLineRunner {
                 }
                 actors {
                     firstName = "d" // firstName is selection argument (see @selection directive in schema)
+
+                    // birthdayFrom is selection argument (see @selection directive in schema)
+                    birthdayFrom = LocalDate.of(1970, 1, 1)
 
                     // id is primary key
                     fields {

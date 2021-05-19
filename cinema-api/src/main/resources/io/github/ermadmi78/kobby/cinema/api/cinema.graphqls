@@ -2,6 +2,7 @@ directive @primaryKey on FIELD_DEFINITION
 directive @required on FIELD_DEFINITION
 directive @default on FIELD_DEFINITION
 directive @selection on FIELD_DEFINITION
+directive @resolve on FIELD_DEFINITION
 
 scalar JSON
 scalar Date
@@ -19,9 +20,9 @@ type Query {
     countries(
         # Part of name of country to search
         name: String,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Country!]!
 
@@ -34,9 +35,9 @@ type Query {
         title: String,
         # Genre of film to search
         genre: Genre,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Film!]! @selection
 
@@ -55,9 +56,9 @@ type Query {
         birthdayTo: Date,
         # Gender of actor to search
         gender: Gender,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Actor!]! @selection
 
@@ -68,8 +69,8 @@ type Query {
 type Mutation {
     # Create country
     createCountry(
-        # Title of ne country
-        title: String!
+        # Name of the country
+        name: String!
     ): Country!
 
     # Create film
@@ -81,7 +82,7 @@ type Mutation {
         film: FilmInput!,
 
         # Add tag to film if tag is not null
-        tag: TagInput
+        tags: TagInput
     ): Film! @selection
 
     # Create actor
@@ -93,7 +94,7 @@ type Mutation {
         actor: ActorInput!,
 
         # Add tag to actor if tag is not null
-        tag: TagInput
+        tags: TagInput
     ): Actor! @selection
 
     # Associate film with actor
@@ -162,9 +163,9 @@ type Country implements Entity {
         title: String,
         # Genre of film to search
         genre: Genre,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Film!]! @selection
 
@@ -183,9 +184,9 @@ type Country implements Entity {
         birthdayTo: Date,
         # Gender of actor to search
         gender: Gender,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Actor!]! @selection
 
@@ -193,7 +194,7 @@ type Country implements Entity {
     taggable(tag: String!): [Taggable!]!
 
     # Find native entities of this country
-    native: [Native!]!
+    native: [Native!]! @resolve
 }
 
 # Film entity. The film belongs to one country and can be played by several actors.
@@ -212,7 +213,7 @@ type Film implements Entity, Taggable {
     countryId: ID! @required
 
     # The country to which the film belongs
-    country: Country!
+    country: Country! @resolve
 
     # Find actors of film by firstName, lastName, birthday and gender. Returns empty list if not found.
     actors(
@@ -226,9 +227,9 @@ type Film implements Entity, Taggable {
         birthdayTo: Date,
         # Gender of actor to search
         gender: Gender,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Actor!]! @selection
 }
@@ -280,7 +281,7 @@ type Actor implements Entity, Taggable {
     countryId: ID! @primaryKey
 
     # The country to which the actor belongs
-    country: Country!
+    country: Country! @resolve
 
     # Find films of actor by title and genre. Returns empty list if not found.
     films(
@@ -288,9 +289,9 @@ type Actor implements Entity, Taggable {
         title: String,
         # Genre of film to search
         genre: Genre,
-        # Limit of result list (default 10). Put -1 to be unlimited.
+        # Limit of result list. Put -1 to be unlimited.
         limit: Int! = 10,
-        # Offset of result list (default 0).
+        # Offset of result list.
         offset: Int! = 0
     ): [Film!]! @selection
 }

@@ -23,7 +23,7 @@ class CinemaTestAdapter(
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-            .bodyValue(request)
+            .bodyValue(mapper.writeValueAsString(request))
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -48,7 +48,7 @@ class CinemaTestAdapter(
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-            .bodyValue(request)
+            .bodyValue(mapper.writeValueAsString(request))
             .exchange()
             .expectStatus().isOk
             .expectBody()

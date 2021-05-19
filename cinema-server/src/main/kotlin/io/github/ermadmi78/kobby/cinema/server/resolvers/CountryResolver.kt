@@ -1,7 +1,7 @@
 package io.github.ermadmi78.kobby.cinema.server.resolvers
 
-import graphql.kickstart.tools.GraphQLResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaCountryResolver
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.ACTOR
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.FILM
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
@@ -16,7 +16,7 @@ import java.time.LocalDate
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class CountryResolver : GraphQLResolver<CountryDto> {
+class CountryResolver : CinemaCountryResolver {
     companion object {
         private val ALL_FIELDS = setOf("id", "name")
     }
@@ -24,7 +24,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
     @Autowired
     private lateinit var dslContext: DSLContext
 
-    suspend fun fields(
+    override suspend fun fields(
         country: CountryDto,
         keys: List<String>?
     ): Map<String, Any?> {
@@ -39,7 +39,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
         return result
     }
 
-    suspend fun film(
+    override suspend fun film(
         country: CountryDto,
         id: Long
     ): FilmDto? = hasAnyRole("USER", "ADMIN") {
@@ -48,7 +48,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
             .fetchAny { it.toDto() }
     }
 
-    suspend fun films(
+    override suspend fun films(
         country: CountryDto,
         title: String?,
         genre: Genre?,
@@ -63,7 +63,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
             .fetch { it.toDto() }
     }
 
-    suspend fun actor(
+    override suspend fun actor(
         country: CountryDto,
         id: Long
     ): ActorDto? = hasAnyRole("USER", "ADMIN") {
@@ -72,7 +72,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
             .fetchAny { it.toDto() }
     }
 
-    suspend fun actors(
+    override suspend fun actors(
         country: CountryDto,
         firstName: String?,
         lastName: String?,
@@ -88,7 +88,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
             .fetch { it.toDto() }
     }
 
-    suspend fun taggable(
+    override suspend fun taggable(
         country: CountryDto,
         tag: String
     ): List<TaggableDto> = hasAnyRole("USER", "ADMIN") {
@@ -105,7 +105,7 @@ class CountryResolver : GraphQLResolver<CountryDto> {
         result
     }
 
-    suspend fun native(country: CountryDto): List<NativeDto> = hasAnyRole("USER", "ADMIN") {
+    override suspend fun native(country: CountryDto): List<NativeDto> = hasAnyRole("USER", "ADMIN") {
         val result = mutableListOf<NativeDto>()
 
         dslContext.selectFrom(FILM).where(FILM.COUNTRY_ID.eq(country.id)).forEach {
