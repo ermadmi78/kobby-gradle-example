@@ -262,7 +262,7 @@ context.query {
 }
 ```
 
-## Customized API
+## API Customization
 
 You can customize the generated GraphQL DSL by means of
 Kotlin [extension functions](https://kotlinlang.org/docs/extensions.html). Note that all generated entities implements
