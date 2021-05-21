@@ -7,7 +7,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.CinemaContext
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createCountry
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.matchers.shouldBe
@@ -62,7 +64,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun createCountryWithFilmAndActors() = runBlocking {
+    fun createCountryWithFilmAndActorsByMeansOfGeneratedAPI() = runBlocking {
         val country = cinemaContext.mutation {
             createCountry("USSR")
         }.createCountry
@@ -154,6 +156,113 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }.country!!
+
+        ussr.name shouldBe "USSR"
+        ussr.films.also { ussrFilms ->
+            ussrFilms.size shouldBe 1
+
+            ussrFilms[0].title shouldBe "Hedgehog in the fog"
+            ussrFilms[0].genre shouldBe Genre.DRAMA
+            ussrFilms[0].countryId shouldBe country.id
+            ussrFilms[0].country.id shouldBe country.id
+            ussrFilms[0].country.name shouldBe "USSR"
+            ussrFilms[0].tags.also {
+                it.size shouldBe 1
+                it[0].value shouldBe "cool"
+            }
+            ussrFilms[0].actors.also { filmActors ->
+                filmActors.size shouldBe 1
+
+                filmActors[0].firstName shouldBe "Hedgehog"
+                filmActors[0].lastName shouldBe null
+                filmActors[0].birthday shouldBe LocalDate.of(1975, 3, 15)
+                filmActors[0].gender shouldBe Gender.MALE
+                filmActors[0].countryId shouldBe country.id
+                filmActors[0].country.id shouldBe country.id
+                filmActors[0].country.name shouldBe "USSR"
+                filmActors[0].tags.also {
+                    it.size shouldBe 1
+                    it[0].value shouldBe "cool"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun createCountryWithFilmAndActorsByMeansOfCustomizedAPI() = runBlocking {
+        val country = cinemaContext.createCountry("USSR")
+
+        country.name shouldBe "USSR"
+
+        val film = country.createFilm(FilmInput("Hedgehog in the fog")) {
+            // tags is selection argument - see @selection directive
+            tags = TagInput {
+                value = "cool"
+            }
+
+            genre()
+            country()
+            tags {
+                value()
+            }
+        }
+
+        film.title shouldBe "Hedgehog in the fog"
+        film.tags.also {
+            it.size shouldBe 1
+            it[0].value shouldBe "cool"
+        }
+        film.genre shouldBe Genre.DRAMA
+        film.countryId shouldBe country.id
+        film.country.id shouldBe country.id
+        film.country.name shouldBe "USSR"
+
+        val actor = country.createActor(ActorInput {
+            firstName = "Hedgehog"
+            birthday = LocalDate.of(1975, 3, 15)
+            gender = Gender.MALE
+        }) {
+            gender()
+            country()
+            tags {
+                value()
+            }
+        }
+
+        actor.firstName shouldBe "Hedgehog"
+        actor.lastName shouldBe null
+        actor.birthday shouldBe LocalDate.of(1975, 3, 15)
+        actor.gender shouldBe Gender.MALE
+        actor.countryId shouldBe country.id
+        actor.country.id shouldBe country.id
+        actor.country.name shouldBe "USSR"
+
+        film.addActor(actor.id) shouldBe true
+        actor.addFilm(film.id) shouldBe false
+
+        film.tag("cool") shouldBe false
+        actor.tag("cool") shouldBe true
+
+        val ussr = country.refresh {
+            films {
+                limit = -1
+                genre()
+                country()
+                tags {
+                    value()
+                }
+
+                // Actors of film
+                actors {
+                    limit = -1
+                    gender()
+                    country()
+                    tags {
+                        value()
+                    }
+                }
+            }
+        }
 
         ussr.name shouldBe "USSR"
         ussr.films.also { ussrFilms ->

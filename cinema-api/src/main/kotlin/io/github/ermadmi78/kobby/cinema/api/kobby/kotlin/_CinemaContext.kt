@@ -1,5 +1,7 @@
 package io.github.ermadmi78.kobby.cinema.api.kobby.kotlin
 
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 
 /**
@@ -35,3 +37,31 @@ suspend fun CinemaContext.findActor(id: Long, __projection: ActorProjection.() -
 
 suspend fun CinemaContext.fetchActor(id: Long, __projection: ActorProjection.() -> Unit = {}): Actor =
     findActor(id, __projection)!!
+
+//**********************************************************************************************************************
+
+suspend fun CinemaContext.createCountry(
+    name: String,
+    __projection: CountryProjection.() -> Unit = {}
+): Country =
+    mutation {
+        createCountry(name, __projection)
+    }.createCountry
+
+suspend fun CinemaContext.createFilm(
+    countryId: Long,
+    film: FilmInput,
+    __query: MutationCreateFilmQuery.() -> Unit = {}
+): Film =
+    mutation {
+        createFilm(countryId, film, __query)
+    }.createFilm
+
+suspend fun CinemaContext.createActor(
+    countryId: Long,
+    actor: ActorInput,
+    __query: MutationCreateActorQuery.() -> Unit = {}
+): Actor =
+    mutation {
+        createActor(countryId, actor, __query)
+    }.createActor

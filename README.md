@@ -15,6 +15,7 @@ See example of GraphQL resolvers authorization [here](https://github.com/ermadmi
 See example of GraphQL server API tests [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaServerTest.kt)
 
 **Coroutine based resolver authorization example:**
+
 ```kotlin
 suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
     println("Query country by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
@@ -25,6 +26,7 @@ suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
 ```
 
 **Mono based resolver authorization example:**
+
 ```kotlin
 @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
@@ -38,6 +40,7 @@ fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
 ```
 
 **Flux based resolver authorization example:**
+
 ```kotlin
 @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 fun countries(
@@ -72,6 +75,7 @@ See source code [here](https://github.com/ermadmi78/kobby-gradle-example/blob/ma
 ## Simple GraphQL query example
 
 **GraphQL query:**
+
 ```graphql
 {
   country(id: 1) {
@@ -82,6 +86,7 @@ See source code [here](https://github.com/ermadmi78/kobby-gradle-example/blob/ma
 ```
 
 **Kotlin DSL query:**
+
 ```kotlin
 context.query {
     country(1) {
@@ -94,6 +99,7 @@ context.query {
 ## Complex GraphQL query example
 
 **GraphQL query:**
+
 ```graphql
 {
   country(id: 7) {
@@ -136,6 +142,7 @@ context.query {
 ```
 
 **Kotlin DSL query:**
+
 ```kotlin
 context.query {
     country(7) {
@@ -193,6 +200,7 @@ context.query {
 ## GraphQL unions query example
 
 **GraphQL query:**
+
 ```graphql
 {
   country(id: 17) {
@@ -223,6 +231,7 @@ context.query {
 ```
 
 **Kotlin DSL query:**
+
 ```kotlin
 context.query {
     country(17) {
@@ -253,29 +262,61 @@ context.query {
 }
 ```
 
-## Sugar API
+## Customized API
 
-You can supplement the generated GraphQL DSL by your own "sugar" API. 
-Source code see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/_CinemaContext.kt) and [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/entity/_Country.kt).
+You can customize the generated GraphQL DSL by means of
+Kotlin [extension functions](https://kotlinlang.org/docs/extensions.html). Note that all generated entities implements
+DSL Context interface. So each entity is an entry point for executing GraphQL queries.
 
-**Let try to use our Kotlin "sugar" API:**
+**First, let extend our DSL Context (source code
+see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/_CinemaContext.kt)):**
+
+```kotlin
+suspend fun CinemaContext.findCountry(id: Long, __projection: CountryProjection.() -> Unit = {}): Country? =
+    query {
+        country(id, __projection)
+    }.country
+
+suspend fun CinemaContext.fetchCountry(id: Long, __projection: CountryProjection.() -> Unit = {}): Country =
+    findCountry(id, __projection)!!
+```
+
+**Second, let extend our Country entity (source code
+see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/entity/_Country.kt)):**
+
+```kotlin
+suspend fun Country.refresh(__projection: (CountryProjection.() -> Unit)? = null): Country = query {
+    country(id) {
+        __projection?.invoke(this) ?: __withCurrentProjection()
+    }
+}.country!!
+
+suspend fun Country.findFilm(id: Long, __projection: FilmProjection.() -> Unit = {}): Film? = refresh {
+    __minimize() // switch off all default fields to minimize GraphQL response
+    film(id, __projection)
+}.film
+```
+
+**Ok, we are ready to use our customized API:**
+
 ```kotlin
  // Fetch country by id
- val country = context.fetchCountry(7)
- println("Country: id=${country.id} name='${country.name}'")
+val country = context.fetchCountry(7)
+println("Country: id=${country.id} name='${country.name}'")
 
- //Find all country films
- val films = country.findFilms {
-     limit = -1
-     genre()
- }
+//Find all country films
+val films = country.findFilms {
+    limit = -1
+    genre()
+}
 
- films.forEach {
-     println("Film: id=${it.id}, title='${it.title}' genre=${it.genre}")
- }
+films.forEach {
+    println("Film: id=${it.id}, title='${it.title}' genre=${it.genre}")
+}
 ```
 
 **This Kotlin DSL code will produce two GraphQL queries:**
+
 ```graphql
 {
   country(id: 7) {
@@ -284,6 +325,7 @@ Source code see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/ma
   }
 }
 ```
+
 ```graphql
 {
   country(id: 7) {
@@ -297,3 +339,12 @@ Source code see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/ma
   }
 }
 ```
+
+**More sophisticated example of API customization see
+in [API tests](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaServerTest.kt)
+.**
+
+The tests `createCountryWithFilmAndActorsByMeansOfGeneratedAPI`
+and `createCountryWithFilmAndActorsByMeansOfCustomizedAPI`
+implements the same scenario by means of native generated API and by means of customized API. You can compare these two
+test cases to see that the customized API significantly improves the readability of your code.

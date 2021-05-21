@@ -311,11 +311,11 @@ class Application : CommandLineRunner {
         println("---------------------------------")
 
         //**************************************************************************************************************
-        //                                                 Sugar API
+        //                                                 Customized API
         //**************************************************************************************************************
         println()
         println("---------------------------------")
-        println("Let try our sugar API")
+        println("Let try our customized API")
 
         println()
         println("Fetch country by id")

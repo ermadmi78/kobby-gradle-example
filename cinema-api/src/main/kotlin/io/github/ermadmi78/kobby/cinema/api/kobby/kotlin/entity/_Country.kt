@@ -1,5 +1,10 @@
 package io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity
 
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createActor
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createFilm
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
+
 /**
  * Created on 13.03.2021
  *
@@ -24,3 +29,11 @@ suspend fun Country.findFilms(__query: CountryFilmsQuery.() -> Unit = {}): List<
     __minimize()
     films(__query)
 }.films
+
+//**********************************************************************************************************************
+
+suspend fun Country.createFilm(film: FilmInput, __query: MutationCreateFilmQuery.() -> Unit = {}): Film =
+    createFilm(id, film, __query)
+
+suspend fun Country.createActor(actor: ActorInput, __query: MutationCreateActorQuery.() -> Unit = {}): Actor =
+    createActor(id, actor, __query)
