@@ -293,19 +293,21 @@ see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-ap
 ```kotlin
 suspend fun Country.refresh(
     __projection: (CountryProjection.() -> Unit)? = null
-): Country = query {
-    country(id) {
-        __projection?.invoke(this) ?: __withCurrentProjection()
-    }
-}.country!!
+): Country = 
+    query {
+        country(id) {
+            __projection?.invoke(this) ?: __withCurrentProjection()
+        }
+    }.country!!
 
 suspend fun Country.findFilm(
     id: Long, 
     __projection: FilmProjection.() -> Unit = {}
-): Film? = refresh {
-    __minimize() // switch off all default fields to minimize GraphQL response
-    film(id, __projection)
-}.film
+): Film? = 
+    refresh {
+        __minimize() // switch off all default fields to minimize GraphQL response
+        film(id, __projection)
+    }.film
 ```
 
 **Ok, we are ready to use our customized API:**
