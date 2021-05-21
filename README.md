@@ -300,14 +300,13 @@ suspend fun Country.refresh(
         }
     }.country!!
 
-suspend fun Country.findFilm(
-    id: Long, 
-    __projection: FilmProjection.() -> Unit = {}
-): Film? = 
+suspend fun Country.findFilms(
+    __query: CountryFilmsQuery.() -> Unit = {}
+): List<Film> =
     refresh {
         __minimize() // switch off all default fields to minimize GraphQL response
-        film(id, __projection)
-    }.film
+        films(__query)
+    }.films
 ```
 
 **Ok, we are ready to use our customized API:**

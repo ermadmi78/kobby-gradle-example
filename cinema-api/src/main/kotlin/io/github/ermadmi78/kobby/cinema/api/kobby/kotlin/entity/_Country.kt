@@ -18,7 +18,7 @@ suspend fun Country.refresh(__projection: (CountryProjection.() -> Unit)? = null
 }.country!!
 
 suspend fun Country.findFilm(id: Long, __projection: FilmProjection.() -> Unit = {}): Film? = refresh {
-    __minimize()
+    __minimize() // switch off all default fields to minimize GraphQL response
     film(id, __projection)
 }.film
 
