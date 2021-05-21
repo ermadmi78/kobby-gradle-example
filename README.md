@@ -272,12 +272,18 @@ DSL Context interface. So each entity is an entry point for executing GraphQL qu
 see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/_CinemaContext.kt)):**
 
 ```kotlin
-suspend fun CinemaContext.findCountry(id: Long, __projection: CountryProjection.() -> Unit = {}): Country? =
+suspend fun CinemaContext.findCountry(
+    id: Long, 
+    __projection: CountryProjection.() -> Unit = {}
+): Country? =
     query {
         country(id, __projection)
     }.country
 
-suspend fun CinemaContext.fetchCountry(id: Long, __projection: CountryProjection.() -> Unit = {}): Country =
+suspend fun CinemaContext.fetchCountry(
+    id: Long, 
+    __projection: CountryProjection.() -> Unit = {}
+): Country = 
     findCountry(id, __projection)!!
 ```
 
@@ -285,13 +291,18 @@ suspend fun CinemaContext.fetchCountry(id: Long, __projection: CountryProjection
 see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/entity/_Country.kt)):**
 
 ```kotlin
-suspend fun Country.refresh(__projection: (CountryProjection.() -> Unit)? = null): Country = query {
+suspend fun Country.refresh(
+    __projection: (CountryProjection.() -> Unit)? = null
+): Country = query {
     country(id) {
         __projection?.invoke(this) ?: __withCurrentProjection()
     }
 }.country!!
 
-suspend fun Country.findFilm(id: Long, __projection: FilmProjection.() -> Unit = {}): Film? = refresh {
+suspend fun Country.findFilm(
+    id: Long, 
+    __projection: FilmProjection.() -> Unit = {}
+): Film? = refresh {
     __minimize() // switch off all default fields to minimize GraphQL response
     film(id, __projection)
 }.film
