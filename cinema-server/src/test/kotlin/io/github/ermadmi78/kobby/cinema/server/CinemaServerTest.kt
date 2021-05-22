@@ -12,6 +12,7 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.spring.SpringListener
 import kotlinx.coroutines.runBlocking
@@ -47,20 +48,6 @@ class CinemaServerTest : AnnotationSpec() {
                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             )
         )
-    }
-
-    @Test
-    fun country() = runBlocking {
-        val country = cinemaContext.query {
-            country(0)
-        }.country!!
-
-        country.id shouldBe 0
-        country.name shouldBe "Argentina"
-
-        shouldThrow<IllegalStateException> {
-            country.fields
-        }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
     }
 
     @Test
@@ -114,6 +101,7 @@ class CinemaServerTest : AnnotationSpec() {
         actor.lastName shouldBe null
         actor.birthday shouldBe LocalDate.of(1975, 3, 15)
         actor.gender shouldBe Gender.MALE
+        actor.tags.isEmpty() shouldBe true
         actor.countryId shouldBe country.id
         actor.country.id shouldBe country.id
         actor.country.name shouldBe "USSR"
@@ -233,6 +221,7 @@ class CinemaServerTest : AnnotationSpec() {
         actor.lastName shouldBe null
         actor.birthday shouldBe LocalDate.of(1975, 3, 15)
         actor.gender shouldBe Gender.MALE
+        actor.tags.isEmpty() shouldBe true
         actor.countryId shouldBe country.id
         actor.country.id shouldBe country.id
         actor.country.name shouldBe "USSR"
@@ -292,6 +281,366 @@ class CinemaServerTest : AnnotationSpec() {
                     it[0].value shouldBe "cool"
                 }
             }
+        }
+    }
+
+    @Test
+    fun simpleQuery() = runBlocking {
+        val country = cinemaContext.query {
+            country(0)
+        }.country!!
+
+        country.id shouldBe 0
+        country.name shouldBe "Argentina"
+
+        shouldThrow<IllegalStateException> {
+            country.fields
+        }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
+
+        val films = cinemaContext.query {
+            films {
+                genre = Genre.COMEDY
+                offset = 2
+                limit = 2
+                genre()
+                fields {
+                    keys = listOf("title", "genre")
+                }
+            }
+        }.films
+
+        films.size shouldBe 2
+        films[0].apply {
+            id shouldBe 4
+            title shouldBe "House"
+            genre shouldBe Genre.COMEDY
+            countryId shouldBe 17
+            shouldThrow<IllegalStateException> {
+                this.country
+            }.message shouldBe "Property [country] is not available - add [country] projection to switch on it"
+            fields shouldContainExactly mapOf("title" to "House", "genre" to "COMEDY")
+        }
+        films[1].apply {
+            id shouldBe 5
+            title shouldBe "Peter's Friends"
+            genre shouldBe Genre.COMEDY
+            countryId shouldBe 17
+            fields shouldContainExactly mapOf("title" to "Peter's Friends", "genre" to "COMEDY")
+        }
+
+        val actors = cinemaContext.query {
+            actors {
+                gender = Gender.FEMALE
+                birthdayFrom = LocalDate.of(1967, 1, 1)
+
+                gender()
+            }
+        }.actors
+        actors.size shouldBe 2
+        actors[0].apply {
+            id shouldBe 0
+            firstName shouldBe "Audrey"
+            lastName shouldBe "Tautou"
+            gender shouldBe Gender.FEMALE
+            birthday shouldBe LocalDate.of(1976, 8, 9)
+        }
+        actors[1].apply {
+            id shouldBe 10
+            firstName shouldBe "Julia"
+            lastName shouldBe "Roberts"
+            gender shouldBe Gender.FEMALE
+            birthday shouldBe LocalDate.of(1967, 10, 28)
+        }
+    }
+
+    @Test
+    fun complexQuery() = runBlocking {
+        val usa = cinemaContext.query {
+            country(18) {
+                films {
+                    title = "d"
+                    genre()
+                    actors {
+                        gender()
+                        country()
+                    }
+                }
+                actors {
+                    limit = 2
+                    gender()
+                    films {
+                        genre = Genre.THRILLER
+                        genre()
+                        country()
+                    }
+                }
+            }
+        }.country!!
+        usa.id shouldBe 18
+        usa.name shouldBe "USA"
+
+        val usaFilms = usa.films
+        usaFilms.size shouldBe 1
+        usaFilms[0].also { film ->
+            film.id shouldBe 11
+            film.title shouldBe "From Dusk Till Dawn"
+            film.genre shouldBe Genre.THRILLER
+            film.countryId shouldBe 18
+
+            film.actors.size shouldBe 2
+            film.actors[0].apply {
+                id shouldBe 11
+                firstName shouldBe "George"
+                lastName shouldBe "Clooney"
+                birthday shouldBe LocalDate.of(1967, 10, 28)
+                gender shouldBe Gender.MALE
+                countryId shouldBe 18
+                country.id shouldBe 18
+                country.name shouldBe "USA"
+            }
+            film.actors[1].apply {
+                id shouldBe 15
+                firstName shouldBe "Salma"
+                lastName shouldBe "Hayek"
+                birthday shouldBe LocalDate.of(1966, 9, 2)
+                gender shouldBe Gender.FEMALE
+                countryId shouldBe 18
+                country.id shouldBe 18
+                country.name shouldBe "USA"
+            }
+        }
+
+        val usaActors = usa.actors
+        usaActors.size shouldBe 2
+        usaActors[0].also { actor ->
+            actor.id shouldBe 9
+            actor.firstName shouldBe "Keanu"
+            actor.lastName shouldBe "Reeves"
+            actor.birthday shouldBe LocalDate.of(1964, 9, 2)
+            actor.gender shouldBe Gender.MALE
+            actor.countryId shouldBe 18
+
+            actor.films.size shouldBe 1
+            actor.films[0].apply {
+                id shouldBe 6
+                title shouldBe "Street Kings"
+                genre shouldBe Genre.THRILLER
+                countryId shouldBe 17
+                country.id shouldBe 17
+                country.name shouldBe "United Kingdom"
+            }
+        }
+        usaActors[1].also { actor ->
+            actor.id shouldBe 10
+            actor.firstName shouldBe "Julia"
+            actor.lastName shouldBe "Roberts"
+            actor.birthday shouldBe LocalDate.of(1967, 10, 28)
+            actor.gender shouldBe Gender.FEMALE
+            actor.countryId shouldBe 18
+
+            actor.films.size shouldBe 1
+            actor.films[0].apply {
+                id shouldBe 8
+                title shouldBe "Ocean's Eleven"
+                genre shouldBe Genre.THRILLER
+                countryId shouldBe 18
+                country.id shouldBe 18
+                country.name shouldBe "USA"
+            }
+        }
+    }
+
+    @Test
+    fun interfaceQuery() = runBlocking {
+        val list = cinemaContext.query {
+            taggable("julia") {
+                tags {
+                    value()
+                }
+                __onFilm {
+                    genre()
+                }
+                __onActor {
+                    gender()
+                }
+            }
+        }.taggable
+
+        list.size shouldBe 4
+        list[0].also {
+            it.id shouldBe 8
+            it.tags.size shouldBe 3
+            it.tags[0].value shouldBe "best"
+            it.tags[1].value shouldBe "julia"
+            it.tags[2].value shouldBe "clooney"
+            (it as Film).apply {
+                title shouldBe "Ocean's Eleven"
+                genre shouldBe Genre.THRILLER
+                countryId shouldBe 18
+            }
+        }
+        list[1].also {
+            it.id shouldBe 9
+            it.tags.size shouldBe 1
+            it.tags[0].value shouldBe "julia"
+            (it as Film).apply {
+                title shouldBe "Stepmom"
+                genre shouldBe Genre.DRAMA
+                countryId shouldBe 18
+            }
+        }
+        list[2].also {
+            it.id shouldBe 10
+            it.tags.size shouldBe 1
+            it.tags[0].value shouldBe "julia"
+            (it as Film).apply {
+                title shouldBe "Pretty Woman"
+                genre shouldBe Genre.COMEDY
+                countryId shouldBe 18
+            }
+        }
+        list[3].also {
+            it.id shouldBe 10
+            it.tags.size shouldBe 2
+            it.tags[0].value shouldBe "best"
+            it.tags[1].value shouldBe "julia"
+            (it as Actor).apply {
+                firstName shouldBe "Julia"
+                lastName shouldBe "Roberts"
+                birthday shouldBe LocalDate.of(1967, 10, 28)
+                gender shouldBe Gender.FEMALE
+                countryId shouldBe 18
+            }
+        }
+    }
+
+    @Test
+    fun unionQuery() = runBlocking {
+        val list = cinemaContext.query {
+            country(17) {
+                __minimize()
+                native {
+                    __onFilm {
+                        genre()
+                    }
+                    __onActor {
+                        gender()
+                    }
+                }
+            }
+        }.country!!.native
+
+        list.size shouldBe 6
+        (list[0] as Film).apply {
+            id shouldBe 4
+            title shouldBe "House"
+            genre shouldBe Genre.COMEDY
+            countryId shouldBe 17
+        }
+        (list[1] as Film).apply {
+            id shouldBe 5
+            title shouldBe "Peter's Friends"
+            genre shouldBe Genre.COMEDY
+            countryId shouldBe 17
+        }
+        (list[2] as Film).apply {
+            id shouldBe 6
+            title shouldBe "Street Kings"
+            genre shouldBe Genre.THRILLER
+            countryId shouldBe 17
+        }
+        (list[3] as Film).apply {
+            id shouldBe 7
+            title shouldBe "Mr. Pip"
+            genre shouldBe Genre.DRAMA
+            countryId shouldBe 17
+        }
+        (list[4] as Actor).apply {
+            id shouldBe 7
+            firstName shouldBe "Hugh"
+            lastName shouldBe "Laurie"
+            birthday shouldBe LocalDate.of(1959, 6, 11)
+            gender shouldBe Gender.MALE
+            countryId shouldBe 17
+        }
+        (list[5] as Actor).apply {
+            id shouldBe 8
+            firstName shouldBe "Stephen"
+            lastName shouldBe "Fry"
+            birthday shouldBe LocalDate.of(1957, 8, 24)
+            gender shouldBe Gender.MALE
+            countryId shouldBe 17
+        }
+    }
+
+    @Test
+    fun unqualifiedInterfaceQuery() = runBlocking {
+        val list = cinemaContext.query {
+            taggable("julia") {
+                tags {
+                    value()
+                }
+            }
+        }.taggable
+
+        list.size shouldBe 4
+        list[0].also {
+            it.id shouldBe 8
+            it.tags.size shouldBe 3
+            it.tags[0].value shouldBe "best"
+            it.tags[1].value shouldBe "julia"
+            it.tags[2].value shouldBe "clooney"
+            (it as Film).apply {
+                title shouldBe "Ocean's Eleven"
+                countryId shouldBe 18
+                shouldThrow<IllegalStateException> {
+                    genre
+                }.message shouldBe "Property [genre] is not available - add [genre] projection to switch on it"
+            }
+        }
+        list[3].also {
+            it.id shouldBe 10
+            it.tags.size shouldBe 2
+            it.tags[0].value shouldBe "best"
+            it.tags[1].value shouldBe "julia"
+            (it as Actor).apply {
+                firstName shouldBe "Julia"
+                lastName shouldBe "Roberts"
+                birthday shouldBe LocalDate.of(1967, 10, 28)
+                countryId shouldBe 18
+                shouldThrow<IllegalStateException> {
+                    gender
+                }.message shouldBe "Property [gender] is not available - add [gender] projection to switch on it"
+            }
+        }
+    }
+
+    @Test
+    fun unqualifiedUnionQuery() = runBlocking {
+        val list = cinemaContext.query {
+            country(17) {
+                native()
+            }
+        }.country!!.native
+
+        list.size shouldBe 6
+        (list[0] as Film).apply {
+            id shouldBe 4
+            title shouldBe "House"
+            countryId shouldBe 17
+            shouldThrow<IllegalStateException> {
+                genre
+            }.message shouldBe "Property [genre] is not available - add [genre] projection to switch on it"
+        }
+        (list[5] as Actor).apply {
+            id shouldBe 8
+            firstName shouldBe "Stephen"
+            lastName shouldBe "Fry"
+            birthday shouldBe LocalDate.of(1957, 8, 24)
+            countryId shouldBe 17
+            shouldThrow<IllegalStateException> {
+                gender
+            }.message shouldBe "Property [gender] is not available - add [gender] projection to switch on it"
         }
     }
 }
