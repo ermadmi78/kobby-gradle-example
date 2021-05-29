@@ -3,24 +3,26 @@ package io.github.ermadmi78.kobby.cinema.kotlin.client
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Actor
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.Film
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.findFilms
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchCountry
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.*
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaCompositeKtorAdapter
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaSimpleKtorAdapter
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Gender
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 import io.ktor.client.*
-import io.ktor.client.features.*
 import io.ktor.client.features.auth.*
 import io.ktor.client.features.auth.providers.*
 import io.ktor.client.features.json.*
-import io.ktor.client.features.logging.*
-import io.ktor.http.*
+import io.ktor.client.features.websocket.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
 /**
  * Created on 03.03.2021
@@ -34,40 +36,55 @@ fun main(args: Array<String>) {
 
 @SpringBootApplication
 class Application : CommandLineRunner {
-    private val httpClient = HttpClient {
-        expectSuccess = true
-        Auth {
-            basic {
-                username = "admin"
-                password = "admin"
-            }
-        }
-        install(JsonFeature) {
-            serializer = JacksonSerializer {
-                registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                registerModule(JavaTimeModule())
-                // Force Jackson to serialize dates as String
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
-        install(Logging) {
-            logger = Logger.DEFAULT
-            level = LogLevel.NONE
-        }
-        defaultRequest {
-            contentType(ContentType.Application.Json)
-            url { takeFrom("http://localhost:8080/graphql") }
-        }
+    override fun run(vararg args: String?): Unit = runBlocking {
+        // Simple adapter does not support GraphQL subscriptions - so we can try only queries and mutations
+        simpleKtorAdapterExample()
+
+        // Composite adapter supports GraphQL subscriptions, queries and mutation - let try it
+        compositeKtorAdapterExample()
     }
 
-    override fun run(vararg args: String?): Unit = runBlocking {
-        val context = cinemaContextOf(CinemaKtorAdapter(httpClient))
+    //******************************************************************************************************************
+    //                                           Simple Adapter
+    //******************************************************************************************************************
+    private suspend fun simpleKtorAdapterExample() {
+        val client = HttpClient {
+            Auth {
+                basic {
+                    username = "admin"
+                    password = "admin"
+                }
+            }
+            install(JsonFeature) {
+                serializer = JacksonSerializer {
+                    registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+                    registerModule(JavaTimeModule())
+                    // Force Jackson to serialize dates as String
+                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                }
+            }
+        }
+
+        val context = cinemaContextOf(
+            CinemaSimpleKtorAdapter(client, "http://localhost:8080/graphql") {
+                println(">> ${it.query}")
+                println(">> ${it.variables}")
+            }
+        )
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Select country by id")
+        println()
+        println("##################################################################")
+        println("##            Simple Ktor Adapter Example                       ##")
+        println("##################################################################")
+        println()
+        println("******************************************************************")
+        println("**                Select country by id                          **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: ID!) { country(id: $arg0) { id name } }
         // {arg0=1}
         context.query {
@@ -78,13 +95,15 @@ class Application : CommandLineRunner {
         }.country?.also {
             println("Country id=${it.id}, name=${it.name}")
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Select countries limited by default")
+        println("******************************************************************")
+        println("**           Select countries limited by default                **")
+        println("******************************************************************")
+        println()
+
         // query { countries { id name } }
         context.query {
             countries {
@@ -94,13 +113,15 @@ class Application : CommandLineRunner {
         }.countries.forEach {
             println("Country id=${it.id}, name=${it.name}")
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Select film by id")
+        println("******************************************************************")
+        println("**                   Select film by id                          **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: ID!) { film(id: $arg0) { id title countryId } }
         // {arg0=0}
         context.query {
@@ -112,13 +133,15 @@ class Application : CommandLineRunner {
         }.film?.also {
             println("Film id=${it.id}, title=${it.title}")
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Select countries unlimited")
+        println("******************************************************************")
+        println("**              Select countries unlimited                      **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: Int!) { countries(limit: $arg0) { id name } }
         // {arg0=-1}
         context.query {
@@ -129,16 +152,17 @@ class Application : CommandLineRunner {
         }.countries.forEach {
             println("Country id=${it.id}, name=${it.name}")
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println(
-            "Select films and actors of some country whose names contain the symbol 'd' " +
-                    "with related actors and films"
-        )
+        println("******************************************************************")
+        println("**          Select films and actors of some country             **")
+        println("**            whose names contain the symbol 'd'                **")
+        println("**              with related actors and films                   **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: ID!, $arg1: String, $arg2: Int!, $arg3: String, $arg4: Date, $arg5: [String!], $arg6: Int!) { country(id: $arg0) { id name films(title: $arg1) { id title genre countryId actors(limit: $arg2) { id firstName lastName birthday gender countryId country { id name } } } actors(firstName: $arg3, birthdayFrom: $arg4) { id fields(keys: $arg5) firstName lastName birthday gender countryId films(limit: $arg6) { id title countryId } } } }
         // {arg0=7, arg1=d, arg2=-1, arg3=d, arg4=1970-01-01, arg5=[birthday, gender], arg6=-1}
         context.query {
@@ -199,7 +223,7 @@ class Application : CommandLineRunner {
             country.films.forEach { film ->
                 println("Film: id=${film.id}, title='${film.title}', genre=${film.genre}")
                 val actors = film.actors.joinToString {
-                    "${it.firstName} ${it.lastName} (${it.gender.name.toLowerCase()}) from ${it.country.name}"
+                    "${it.firstName} ${it.lastName} (${it.gender.name.lowercase()}) from ${it.country.name}"
                 }
                 println("    actors: $actors")
             }
@@ -211,13 +235,15 @@ class Application : CommandLineRunner {
                 println("    films: ${actor.films.joinToString { it.title }}")
             }
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Let try to select interfaces")
+        println("******************************************************************")
+        println("**              Let try to select interfaces                    **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: String!) { taggable(tag: $arg0) { id tags { value } __typename ... on Film { title genre countryId } ... on Actor { firstName lastName birthday gender countryId country { id name } } } }
         // {arg0=best}
         context.query {
@@ -252,20 +278,22 @@ class Application : CommandLineRunner {
                 }
                 is Actor -> {
                     println(
-                        "Actor[$tags]: ${cur.firstName} ${cur.lastName} (${cur.gender.name.toLowerCase()}) " +
+                        "Actor[$tags]: ${cur.firstName} ${cur.lastName} (${cur.gender.name.lowercase()}) " +
                                 "from ${cur.country.name}"
                     )
                 }
                 else -> error("Invalid algorithm")
             }
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
 
         println()
-        println("---------------------------------")
-        println("Let try to select unions")
+        println("******************************************************************")
+        println("**                Let try to select unions                      **")
+        println("******************************************************************")
+        println()
+
         // query($arg0: ID!) { country(id: $arg0) { id native { __typename ... on Film { id title genre countryId } ... on Actor { id firstName lastName birthday gender countryId country { id name } } } } }
         // {arg0=17}
         context.query {
@@ -301,29 +329,28 @@ class Application : CommandLineRunner {
                 }
                 is Actor -> {
                     println(
-                        "Actor: ${cur.firstName} ${cur.lastName} (${cur.gender.name.toLowerCase()}) " +
+                        "Actor: ${cur.firstName} ${cur.lastName} (${cur.gender.name.lowercase()}) " +
                                 "from ${cur.country.name}"
                     )
                 }
                 else -> error("Invalid algorithm")
             }
         }
-        println("---------------------------------")
 
         //**************************************************************************************************************
-        //                                                 Customized API
-        //**************************************************************************************************************
-        println()
-        println("---------------------------------")
-        println("Let try our customized API")
 
         println()
-        println("Fetch country by id")
+        println("******************************************************************")
+        println("**                Let try our customized API                    **")
+        println("******************************************************************")
+        println()
+
+        println(">> Fetch country by id")
         val country = context.fetchCountry(7)
         println("Country: id=${country.id} name='${country.name}'")
 
         println()
-        println("Find all country films")
+        println(">> Find all country films")
         val films = country.findFilms {
             limit = -1
             genre()
@@ -332,5 +359,140 @@ class Application : CommandLineRunner {
         films.forEach {
             println("Film: id=${it.id}, title='${it.title}' genre=${it.genre}")
         }
+    }
+
+
+    //******************************************************************************************************************
+    //                                           Composite Adapter
+    //******************************************************************************************************************
+    suspend fun compositeKtorAdapterExample() {
+        val client = HttpClient {
+            install(WebSockets)
+        }
+
+        val mapper = jacksonObjectMapper()
+            .registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+            .registerModule(JavaTimeModule())
+            // Force Jackson to serialize dates as String
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+
+        val context = cinemaContextOf(
+            CinemaCompositeKtorAdapter(
+                client,
+                "http://localhost:8080/graphql",
+                "ws://localhost:8080/subscriptions",
+                object : CinemaMapper {
+                    override fun serialize(value: Any): String =
+                        mapper.writeValueAsString(value)
+
+                    override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
+                        mapper.readValue(content, contentType.java)
+                },
+                mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=")
+            ) {
+                println(">> ${it.query}")
+                println(">> ${it.variables}")
+            }
+        )
+
+        println()
+        println()
+        println("##################################################################")
+        println("##            Composite Ktor Adapter Example                    ##")
+        println("##################################################################")
+        println()
+        println("******************************************************************")
+        println("**         Let try 'countryCreated' subscription                **")
+        println("******************************************************************")
+        println()
+
+        context.subscription {
+            countryCreated {
+                // id is primary key (see @primaryKey directive in schema)
+                // name is default (see @default directive in schema)
+            }
+        }.subscribe {
+            println()
+            context.createCountry("First")
+            context.createCountry("Second")
+            context.createCountry("Third")
+            println()
+
+            for (i in 1..3) {
+                receive().countryCreated.also {
+                    println("<< Country created: id=${it.id} name=${it.name}")
+                }
+            }
+        }
+
+        //**************************************************************************************************************
+
+        println()
+        println("******************************************************************")
+        println("** Let try 'filmCreated' subscription with filtering by country **")
+        println("******************************************************************")
+        println()
+
+        context.subscription {
+            filmCreated(countryId = 1) {
+                country()
+            }
+        }.subscribe {
+            println()
+            context.createFilm(1, FilmInput("First"))
+            context.createFilm(0, FilmInput("Second"))
+            context.createFilm(1, FilmInput("Third"))
+            println()
+
+            for (i in 1..2) {
+                receive().filmCreated.also {
+                    println("<< Film created: id=${it.id} name=${it.title} country=${it.country.name}")
+                }
+            }
+        }
+
+        //**************************************************************************************************************
+
+        println()
+        println("******************************************************************")
+        println("**   Let try 'actorCreated' subscription with customized API    **")
+        println("******************************************************************")
+        println()
+
+        val brazil: Country = context.fetchCountry(4)
+        val spain: Country = context.fetchCountry(15)
+        spain.onActorCreated { gender(); country() }.subscribe {
+            println()
+            spain.createActor(ActorInput {
+                firstName = "First"
+                birthday = LocalDate.now()
+                gender = Gender.FEMALE
+            })
+            brazil.createActor(ActorInput {
+                firstName = "Second"
+                birthday = LocalDate.now()
+                gender = Gender.FEMALE
+            })
+            spain.createActor(ActorInput {
+                firstName = "Third"
+                birthday = LocalDate.now()
+                gender = Gender.MALE
+            })
+            println()
+
+            for (i in 1..2) {
+                val createdActor: Actor = receive()
+                println(
+                    "<< Actor created: " +
+                            "id=${createdActor.id} " +
+                            "name=${createdActor.firstName} " +
+                            "gender=${createdActor.gender} " +
+                            "country=${createdActor.country.name}"
+                )
+            }
+        }
+
+        println()
+        println("##################################################################")
     }
 }

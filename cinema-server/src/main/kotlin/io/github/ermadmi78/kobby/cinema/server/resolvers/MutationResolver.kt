@@ -2,6 +2,7 @@ package io.github.ermadmi78.kobby.cinema.server.resolvers
 
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaMutationResolver
+import io.github.ermadmi78.kobby.cinema.server.eventbus.EventBus
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
@@ -14,13 +15,23 @@ import org.springframework.stereotype.Component
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class MutationResolver(private val dslContext: DSLContext) : CinemaMutationResolver {
+class MutationResolver(
+    private val dslContext: DSLContext,
+    private val eventBus: EventBus
+) : CinemaMutationResolver {
     override suspend fun createCountry(name: String): CountryDto = hasAnyRole("ADMIN") {
-        dslContext.insertInto(COUNTRY)
+        println(
+            "Mutation create country by user [${authentication.name}] " +
+                    "in thread [${Thread.currentThread().name}]"
+        )
+        val newCountry = dslContext.insertInto(COUNTRY)
             .set(COUNTRY.NAME, name)
             .returning()
             .fetchOne()!!
             .toDto()
+
+        eventBus.fireCountryCreated(newCountry)
+        newCountry
     }
 
     override suspend fun createFilm(
@@ -28,7 +39,7 @@ class MutationResolver(private val dslContext: DSLContext) : CinemaMutationResol
         film: FilmInput,
         tags: TagInput?
     ): FilmDto = hasAnyRole("ADMIN") {
-        dslContext.insertInto(FILM)
+        val newFilm = dslContext.insertInto(FILM)
             .set(FILM.COUNTRY_ID, countryId)
             .set(FILM.TITLE, film.title)
             .set(FILM.GENRE, film.genre.toRecord())
@@ -36,6 +47,9 @@ class MutationResolver(private val dslContext: DSLContext) : CinemaMutationResol
             .returning()
             .fetchOne()!!
             .toDto()
+
+        eventBus.fireFilmCreated(newFilm)
+        newFilm
     }
 
     override suspend fun createActor(
@@ -43,7 +57,7 @@ class MutationResolver(private val dslContext: DSLContext) : CinemaMutationResol
         actor: ActorInput,
         tags: TagInput?
     ): ActorDto = hasAnyRole("ADMIN") {
-        dslContext.insertInto(ACTOR)
+        val newActor = dslContext.insertInto(ACTOR)
             .set(ACTOR.COUNTRY_ID, countryId)
             .set(ACTOR.FIRST_NAME, actor.firstName)
             .set(ACTOR.LAST_NAME, actor.lastName)
@@ -53,6 +67,9 @@ class MutationResolver(private val dslContext: DSLContext) : CinemaMutationResol
             .returning()
             .fetchOne()!!
             .toDto()
+
+        eventBus.fireActorCreated(newActor)
+        newActor
     }
 
     override suspend fun associate(

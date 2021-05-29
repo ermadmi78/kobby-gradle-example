@@ -15,6 +15,7 @@ val kotlinJvmVersion: String by project
 val kotlinVersion: String by project
 val kotestVersion: String by project
 val jacksonVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
 
 tasks {
@@ -42,10 +43,11 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
     implementation("io.ktor:ktor-client-auth:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
 

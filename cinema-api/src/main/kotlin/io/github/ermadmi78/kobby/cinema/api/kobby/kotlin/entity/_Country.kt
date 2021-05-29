@@ -1,7 +1,6 @@
 package io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity
 
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createActor
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createFilm
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
 
@@ -37,3 +36,11 @@ suspend fun Country.createFilm(film: FilmInput, __query: MutationCreateFilmQuery
 
 suspend fun Country.createActor(actor: ActorInput, __query: MutationCreateActorQuery.() -> Unit = {}): Actor =
     createActor(id, actor, __query)
+
+//**********************************************************************************************************************
+
+fun Country.onFilmCreated(__projection: FilmProjection.() -> Unit = {}): CinemaSubscriber<Film> =
+    onFilmCreated(id, __projection)
+
+fun Country.onActorCreated(__projection: ActorProjection.() -> Unit = {}): CinemaSubscriber<Actor> =
+    onActorCreated(id, __projection)

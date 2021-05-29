@@ -6,12 +6,12 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.server.ServerWebExchange
 
 /**
- * Created on 24.04.2021
+ * Created on 03.06.2021
  *
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
-class GraphQLSpringHttpScope(
+class GraphQLSpringServerWebExchangeScope(
     serverWebExchange: ServerWebExchange,
-    extractor: suspend (ServerWebExchange) -> Authentication? = { null }
+    provider: suspend () -> Authentication? = { null }
 ) : GraphQLSpringServerWebExchangeContext(serverWebExchange),
-    CoroutineScope by CoroutineScope(HttpContext(serverWebExchange, extractor))
+    CoroutineScope by CoroutineScope(AuthenticationContext(provider))

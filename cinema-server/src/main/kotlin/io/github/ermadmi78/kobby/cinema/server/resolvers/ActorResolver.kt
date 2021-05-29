@@ -9,7 +9,6 @@ import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
@@ -18,13 +17,10 @@ import org.springframework.stereotype.Component
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class ActorResolver : CinemaActorResolver {
+class ActorResolver(private val dslContext: DSLContext) : CinemaActorResolver {
     companion object {
         private val ALL_FIELDS = setOf("id", "firstName", "lastName", "birthday", "gender")
     }
-
-    @Autowired
-    private lateinit var dslContext: DSLContext
 
     override suspend fun fields(
         actor: ActorDto,

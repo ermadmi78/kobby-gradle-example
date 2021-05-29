@@ -125,6 +125,14 @@ type Mutation {
     ): Boolean!
 }
 
+type Subscription {
+    countryCreated: Country!
+
+    filmCreated(countryId: ID): Film!
+
+    actorCreated(countryId: ID): Actor!
+}
+
 # Base interface for all entities.
 interface Entity {
     # Unique identifier of entity

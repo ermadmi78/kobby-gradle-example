@@ -14,7 +14,7 @@ See example of GraphQL resolvers authorization [here](https://github.com/ermadmi
 
 See example of GraphQL server API tests [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaServerTest.kt)
 
-**Coroutine based resolver authorization example:**
+**GraphQL query authorization example:**
 
 ```kotlin
 suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
@@ -25,45 +25,34 @@ suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
 }
 ```
 
-**Mono based resolver authorization example:**
+**GraphQL mutation authorization example:**
 
 ```kotlin
-@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
-    val authentication = getAuthentication()!!
-    println("Query film by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
+override suspend fun createCountry(name: String): CountryDto = hasAnyRole("ADMIN") {
+    println(
+        "Mutation create country by user [${authentication.name}] " +
+                "in thread [${Thread.currentThread().name}]"
+    )
+    val newCountry = dslContext.insertInto(COUNTRY)
+        .set(COUNTRY.NAME, name)
+        .returning()
+        .fetchOne()!!
+        .toDto()
 
-    dslContext.selectFrom(FILM)
-        .where(FILM.ID.eq(id))
-        .fetchAny { it.toDto() }
+    eventBus.fireCountryCreated(newCountry)
+    newCountry
 }
 ```
 
-**Flux based resolver authorization example:**
+**GraphQL subscription authorization example:**
 
 ```kotlin
-@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-fun countries(
-    name: String?,
-    limit: Int,
-    offset: Int
-): Flux<CountryDto> = flux(resolverDispatcher) {
-    val authentication = getAuthentication()!!
-    println("Query countries by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
-
-    var condition: Condition = trueCondition()
-
-    if (!name.isNullOrBlank()) {
-        condition = condition.and(COUNTRY.NAME.containsIgnoreCase(name.trim()))
-    }
-
-    dslContext.selectFrom(COUNTRY)
-        .where(condition)
-        .limit(offset.prepare(), limit.prepare())
-        .fetch { it.toDto() }
-        .forEach {
-            send(it)
-        }
+override suspend fun countryCreated(): Publisher<CountryDto> = hasAnyRole("USER", "ADMIN") {
+    println(
+        "Subscription on country created by user [${authentication.name}] " +
+                "in thread [${Thread.currentThread().name}]"
+    )
+    eventBus.countryCreatedFlow().asPublisher()
 }
 ```
 
@@ -262,6 +251,43 @@ context.query {
 }
 ```
 
+## GraphQL subscription example
+
+**GraphQL subscription:**
+
+```graphql
+subscription {
+  filmCreated(countryId: 1) {
+    id
+    title
+    countryId
+    country {
+      id
+      name
+    }
+  }
+}
+```
+
+```kotlin
+context.subscription {
+    filmCreated(countryId = 1) {
+        // id is primary key (see @primaryKey directive in schema)
+        // title is default (see @default directive in schema)
+        // countryId is required (see @required directive in schema)
+        country {
+            // id is primary key (see @primaryKey directive in schema)
+            // name is default (see @default directive in schema)
+        }
+    }
+}.subscribe {
+    while (true) {
+        val newFilm = receive().filmCreated
+        println("<< Film created: id=${newFilm.id} name=${newFilm.title} country=${newFilm.country.name}")
+    }
+}
+```
+
 ## API Customization
 
 You can customize the generated GraphQL DSL by means of
@@ -360,3 +386,42 @@ The tests `createCountryWithFilmAndActorsByMeansOfGeneratedAPI`
 and `createCountryWithFilmAndActorsByMeansOfCustomizedAPI`
 implements the same scenario by means of native generated API and by means of customized API. You can compare these two
 test cases to see that the customized API significantly improves the readability of your code.
+
+### Subscription API customization
+
+You can customize subscriptions DSL too.
+
+**First, let extend our DSL Context**
+
+```kotlin
+fun CinemaContext.onFilmCreated(
+    countryId: Long?,
+    __projection: FilmProjection.() -> Unit = {}
+): CinemaSubscriber<Film> = CinemaSubscriber {
+    subscription {
+        filmCreated(countryId, __projection)
+    }.subscribe {
+        it(CinemaReceiver {
+            receive().filmCreated
+        })
+    }
+}
+```
+
+**Second, extend our Country entity**
+
+```kotlin
+fun Country.onFilmCreated(__projection: FilmProjection.() -> Unit = {}): CinemaSubscriber<Film> =
+    onFilmCreated(id, __projection)
+```
+
+**Ok, we are ready to listen new films in country:**
+```kotlin
+val australia = context.fetchCountry(1)
+australia.onFilmCreated().subscribe {
+    while (true) {
+        val newFilm = receive()
+        println("<< Film created: id=${newFilm.id} name=${newFilm.title}")
+    }
+}
+```

@@ -2,13 +2,10 @@ package io.github.ermadmi78.kobby.cinema.server
 
 import graphql.kickstart.spring.webflux.GraphQLSpringWebfluxContextBuilder
 import graphql.kickstart.tools.CoroutineContextProvider
-import graphql.kickstart.tools.SchemaParserOptions.GenericWrapper
 import graphql.scalars.ExtendedScalars
 import graphql.schema.GraphQLScalarType
 import io.github.ermadmi78.kobby.cinema.server.resolvers.QueryResolver
 import io.github.ermadmi78.kobby.cinema.server.security.SecuredGraphQLContextBuilder
-import io.github.ermadmi78.kobby.cinema.server.security.createFluxGenericWrapper
-import io.github.ermadmi78.kobby.cinema.server.security.createMonoGenericWrapper
 import io.github.ermadmi78.kobby.cinema.server.security.getBasicAuthentication
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -18,7 +15,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService
@@ -40,7 +36,6 @@ import kotlin.coroutines.CoroutineContext
 @Configuration
 @EnableWebFlux
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity
 class ApplicationConfiguration {
     /**
      * Static http resources for GraphIQL (http://localhost:8080/graphiql)
@@ -59,20 +54,6 @@ class ApplicationConfiguration {
      */
     @Bean
     fun scalarDate(): GraphQLScalarType = ExtendedScalars.Date
-
-    /**
-     * Mono based resolvers support
-     * @see: [QueryResolver.film]
-     */
-    @Bean
-    fun monoGenericWrapper(): GenericWrapper = createMonoGenericWrapper()
-
-    /**
-     * Flux based resolvers support
-     * @see: [QueryResolver.countries]
-     */
-    @Bean
-    fun fluxGenericWrapper(): GenericWrapper = createFluxGenericWrapper()
 
     /**
      * Coroutine based resolvers dispatcher
@@ -100,6 +81,17 @@ class ApplicationConfiguration {
 
     /**
      * Reactive Basic HTTP security configuration
+     *
+     * Apollo Client does not use HTTP headers to send authentication token.
+     * Instead it sends token in payload of GQL_CONNECTION_INIT message.
+     * So, we have to switch off Spring Boot authentication checking of 'subscriptions' endpoint
+     * and authenticate subscription manually in [SecuredGraphQLContextBuilder]
+     *
+     * See:
+     *
+     * https://www.apollographql.com/docs/react/data/subscriptions/#5-authenticate-over-websocket-optional
+     *
+     * https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
      */
     @Bean
     fun securityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
@@ -108,6 +100,7 @@ class ApplicationConfiguration {
             .authorizeExchange()
             .pathMatchers("/graphiql").permitAll()  // Permit GraphIQL (http://localhost:8080/graphiql)
             .pathMatchers("/vendor/**").permitAll() // Permit GraphIQL static resources
+            .pathMatchers("/subscriptions").permitAll() // See 'securityFilterChain` method documentation
             .anyExchange().authenticated()
             .and()
             .httpBasic()

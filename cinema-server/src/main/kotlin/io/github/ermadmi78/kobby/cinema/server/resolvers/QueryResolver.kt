@@ -1,22 +1,13 @@
 package io.github.ermadmi78.kobby.cinema.server.resolvers
 
-import graphql.kickstart.tools.GraphQLQueryResolver
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaQueryResolver
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
-import io.github.ermadmi78.kobby.cinema.server.security.getAuthentication
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.reactor.flux
-import kotlinx.coroutines.reactor.mono
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import java.time.LocalDate
 
 /**
@@ -25,31 +16,22 @@ import java.time.LocalDate
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-@ExperimentalCoroutinesApi
-class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : GraphQLQueryResolver {
-    @Autowired
-    private lateinit var dslContext: DSLContext
-
+class QueryResolver(private val dslContext: DSLContext) : CinemaQueryResolver {
     /**
      * Coroutine based resolver authorization example
      */
-    suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
+    override suspend fun country(id: Long): CountryDto? = hasAnyRole("USER", "ADMIN") {
         println("Query country by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
         dslContext.selectFrom(COUNTRY)
             .where(COUNTRY.ID.eq(id))
             .fetchAny { it.toDto() }
     }
 
-    /**
-     * Flux based resolver authorization example
-     */
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    fun countries(
+    override suspend fun countries(
         name: String?,
         limit: Int,
         offset: Int
-    ): Flux<CountryDto> = flux(resolverDispatcher) {
-        val authentication = getAuthentication()!!
+    ): List<CountryDto> = hasAnyRole("USER", "ADMIN") {
         println("Query countries by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
 
         var condition: Condition = trueCondition()
@@ -62,17 +44,9 @@ class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : Graph
             .where(condition)
             .limit(offset.prepare(), limit.prepare())
             .fetch { it.toDto() }
-            .forEach {
-                send(it)
-            }
     }
 
-    /**
-     * Mono based resolver authorization example
-     */
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    fun film(id: Long): Mono<FilmDto?> = mono(resolverDispatcher) {
-        val authentication = getAuthentication()!!
+    override suspend fun film(id: Long): FilmDto? = hasAnyRole("USER", "ADMIN") {
         println("Query film by user [${authentication.name}] in thread [${Thread.currentThread().name}]")
 
         dslContext.selectFrom(FILM)
@@ -80,7 +54,7 @@ class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : Graph
             .fetchAny { it.toDto() }
     }
 
-    suspend fun films(
+    override suspend fun films(
         title: String?,
         genre: Genre?,
         limit: Int,
@@ -92,13 +66,13 @@ class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : Graph
             .fetch { it.toDto() }
     }
 
-    suspend fun actor(id: Long): ActorDto? = hasAnyRole("USER", "ADMIN") {
+    override suspend fun actor(id: Long): ActorDto? = hasAnyRole("USER", "ADMIN") {
         dslContext.selectFrom(ACTOR)
             .where(ACTOR.ID.eq(id))
             .fetchAny { it.toDto() }
     }
 
-    suspend fun actors(
+    override suspend fun actors(
         firstName: String?,
         lastName: String?,
         birthdayFrom: LocalDate?,
@@ -113,7 +87,7 @@ class QueryResolver(private val resolverDispatcher: CoroutineDispatcher) : Graph
             .fetch { it.toDto() }
     }
 
-    suspend fun taggable(tag: String): List<TaggableDto> = hasAnyRole("USER", "ADMIN") {
+    override suspend fun taggable(tag: String): List<TaggableDto> = hasAnyRole("USER", "ADMIN") {
         val result = mutableListOf<TaggableDto>()
 
         dslContext.selectFrom(FILM).where(filmTagsContains(tag)).forEach {

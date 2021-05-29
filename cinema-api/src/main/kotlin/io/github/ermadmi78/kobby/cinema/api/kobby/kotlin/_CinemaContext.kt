@@ -65,3 +65,43 @@ suspend fun CinemaContext.createActor(
     mutation {
         createActor(countryId, actor, __query)
     }.createActor
+
+//**********************************************************************************************************************
+
+fun CinemaContext.onCountryCreated(
+    __projection: CountryProjection.() -> Unit = {}
+): CinemaSubscriber<Country> = CinemaSubscriber {
+    subscription {
+        countryCreated(__projection)
+    }.subscribe {
+        it(CinemaReceiver {
+            receive().countryCreated
+        })
+    }
+}
+
+fun CinemaContext.onFilmCreated(
+    countryId: Long?,
+    __projection: FilmProjection.() -> Unit = {}
+): CinemaSubscriber<Film> = CinemaSubscriber {
+    subscription {
+        filmCreated(countryId, __projection)
+    }.subscribe {
+        it(CinemaReceiver {
+            receive().filmCreated
+        })
+    }
+}
+
+fun CinemaContext.onActorCreated(
+    countryId: Long?,
+    __projection: ActorProjection.() -> Unit = {}
+): CinemaSubscriber<Actor> = CinemaSubscriber {
+    subscription {
+        actorCreated(countryId, __projection)
+    }.subscribe {
+        it(CinemaReceiver {
+            receive().actorCreated
+        })
+    }
+}

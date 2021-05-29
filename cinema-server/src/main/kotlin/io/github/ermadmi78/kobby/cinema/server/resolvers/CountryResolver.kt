@@ -6,7 +6,6 @@ import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.ACTOR
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.FILM
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -16,13 +15,10 @@ import java.time.LocalDate
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
 @Component
-class CountryResolver : CinemaCountryResolver {
+class CountryResolver(private val dslContext: DSLContext) : CinemaCountryResolver {
     companion object {
         private val ALL_FIELDS = setOf("id", "name")
     }
-
-    @Autowired
-    private lateinit var dslContext: DSLContext
 
     override suspend fun fields(
         country: CountryDto,

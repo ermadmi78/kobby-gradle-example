@@ -34,6 +34,7 @@ val jacksonVersion: String by project
 val commonsLang3Version: String by project
 val graphqlJavaKickstartVersion: String by project
 val graphqlJavaExtendedScalarsVersion: String by project
+val ktorVersion: String by project
 
 flyway {
     url = jooqUrl
@@ -171,10 +172,13 @@ dependencies {
     testImplementation(kotlin("test-junit5", kotlinVersion))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinxCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinxCoroutinesVersion")
 
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")
     testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
+
+    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-websockets:$ktorVersion")
 }
