@@ -14,6 +14,8 @@ See example of GraphQL resolvers authorization [here](https://github.com/ermadmi
 
 See example of GraphQL server API tests [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaServerTest.kt)
 
+See example of GraphQL subscription tests [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaSubscriptionsTest.kt) 
+
 **GraphQL query authorization example:**
 
 ```kotlin
@@ -391,7 +393,8 @@ test cases to see that the customized API significantly improves the readability
 
 You can customize subscriptions DSL too.
 
-**First, let extend our DSL Context**
+**First, let extend our DSL Context (source code
+see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/_CinemaContext.kt)):**
 
 ```kotlin
 fun CinemaContext.onFilmCreated(
@@ -408,7 +411,8 @@ fun CinemaContext.onFilmCreated(
 }
 ```
 
-**Second, extend our Country entity**
+**Second, extend our Country entity (source code
+see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/entity/_Country.kt)):**
 
 ```kotlin
 fun Country.onFilmCreated(__projection: FilmProjection.() -> Unit = {}): CinemaSubscriber<Film> =
@@ -421,7 +425,15 @@ val australia = context.fetchCountry(1)
 australia.onFilmCreated().subscribe {
     while (true) {
         val newFilm = receive()
-        println("<< Film created: id=${newFilm.id} name=${newFilm.title}")
+        println("<< Film created: id=${newFilm.id} " +
+                "name=${newFilm.title}")
     }
 }
 ```
+
+**More examples of subscription customization see in 
+[Subscription Tests](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-server/src/test/kotlin/io/github/ermadmi78/kobby/cinema/server/CinemaSubscriptionsTest.kt)
+.**
+
+The tests `subscriptionsByMeansOfGeneratedAPI` and `subscriptionsByMeansOfCustomizedAPI`
+implements the same scenario by means of native generated subscription API and by means of customized API.
