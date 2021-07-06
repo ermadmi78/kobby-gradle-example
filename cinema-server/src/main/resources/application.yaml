@@ -32,6 +32,8 @@ graphql.playground:
   enabled: true
   cdn:
     enabled: false
+  settings:
+    request.credentials: include
   headers:
     Authorization: Basic YWRtaW46YWRtaW4=
 
