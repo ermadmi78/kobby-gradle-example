@@ -98,6 +98,7 @@ class ApplicationConfiguration {
         return http
             .csrf().disable()
             .authorizeExchange()
+            .pathMatchers("/playground").permitAll()  // Permit GraphQL Playground (http://localhost:8080/playground)
             .pathMatchers("/graphiql").permitAll()  // Permit GraphIQL (http://localhost:8080/graphiql)
             .pathMatchers("/vendor/**").permitAll() // Permit GraphIQL static resources
             .pathMatchers("/subscriptions").permitAll() // See 'securityFilterChain` method documentation

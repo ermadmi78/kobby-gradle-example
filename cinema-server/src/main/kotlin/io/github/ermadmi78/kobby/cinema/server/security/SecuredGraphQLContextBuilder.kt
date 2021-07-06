@@ -29,6 +29,7 @@ class SecuredGraphQLContextBuilder(
     //******************************************************************************************************************
 
     companion object {
+        private const val HTTP_HEADERS_AUTH_TOKEN_NAME = "Authorization"
         private const val APOLLO_AUTH_TOKEN_NAME = "authToken"
         private const val PRE_AUTHORIZED_AUTHENTICATION = "PRE_AUTHORIZED_AUTHENTICATION"
     }
@@ -59,7 +60,9 @@ class SecuredGraphQLContextBuilder(
     }
 
     private val OperationMessage?.authToken: String?
-        get() = (this?.payload as? Map<*, *>)?.get(APOLLO_AUTH_TOKEN_NAME) as? String
+        get() = (this?.payload as? Map<*, *>)?.let {
+            (it[HTTP_HEADERS_AUTH_TOKEN_NAME] ?: it[APOLLO_AUTH_TOKEN_NAME]) as? String
+        }
 
     private val WebSocketSession?.authToken: String?
         get() = this?.handshakeInfo?.headers?.get(HttpHeaders.AUTHORIZATION)?.firstOrNull()
