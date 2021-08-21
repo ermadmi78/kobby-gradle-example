@@ -37,6 +37,10 @@ fun main(args: Array<String>) {
 @SpringBootApplication
 class Application : CommandLineRunner {
     override fun run(vararg args: String?): Unit = runBlocking {
+        // See more details about the Kobby customization directives
+        // (@default, @required, @primaryKey and @selection) here:
+        // https://github.com/ermadmi78/kobby/wiki/Client-DSL-Customization
+
         // Simple adapter does not support GraphQL subscriptions - so we can try only queries and mutations
         simpleKtorAdapterExample()
 

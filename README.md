@@ -68,6 +68,10 @@ See source code [here](https://github.com/ermadmi78/kobby-gradle-example/blob/ma
 You can see more details about the generated GraphQL DSL
 [here](https://github.com/ermadmi78/kobby/wiki/Overview-of-generated-GraphQL-DSL)
 
+You can see more details about the Kobby customization directives 
+(`@default`, `@required`, `@primaryKey` and `@selection`) 
+[here](https://github.com/ermadmi78/kobby/wiki/Client-DSL-Customization)
+
 ## Simple GraphQL query example
 
 **GraphQL query:**
