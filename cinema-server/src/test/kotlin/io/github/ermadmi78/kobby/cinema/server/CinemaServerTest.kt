@@ -82,6 +82,7 @@ class CinemaServerTest : AnnotationSpec() {
         film.countryId shouldBe country.id
         film.country.id shouldBe country.id
         film.country.name shouldBe "USSR"
+        film.toString() shouldBe "Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${film.countryId}, country=Country(id=${film.country.id}, name=USSR))"
 
         val actor = cinemaContext.mutation {
             createActor(country.id, ActorInput {
@@ -105,6 +106,7 @@ class CinemaServerTest : AnnotationSpec() {
         actor.countryId shouldBe country.id
         actor.country.id shouldBe country.id
         actor.country.name shouldBe "USSR"
+        actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
 
         cinemaContext.mutation {
             associate(film.id, actor.id)
@@ -174,6 +176,7 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }
+        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
     }
 
     @Test
@@ -204,6 +207,7 @@ class CinemaServerTest : AnnotationSpec() {
         film.countryId shouldBe country.id
         film.country.id shouldBe country.id
         film.country.name shouldBe "USSR"
+        film.toString() shouldBe "Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${film.countryId}, country=Country(id=${film.country.id}, name=USSR))"
 
         val actor = country.createActor(ActorInput {
             firstName = "Hedgehog"
@@ -225,6 +229,7 @@ class CinemaServerTest : AnnotationSpec() {
         actor.countryId shouldBe country.id
         actor.country.id shouldBe country.id
         actor.country.name shouldBe "USSR"
+        actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
 
         film.addActor(actor.id) shouldBe true
         actor.addFilm(film.id) shouldBe false
@@ -282,6 +287,7 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }
+        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
     }
 
     @Test
