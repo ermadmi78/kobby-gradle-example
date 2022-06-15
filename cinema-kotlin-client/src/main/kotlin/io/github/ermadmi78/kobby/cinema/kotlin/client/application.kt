@@ -392,7 +392,8 @@ class Application : CommandLineRunner {
                     override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
                         mapper.readValue(content, contentType.java)
                 },
-                mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=")
+                mapOf("Authorization" to "Basic YWRtaW46YWRtaW4="),
+                subscriptionReceiveTimeoutMillis = 23000
             ) {
                 println(">> ${it.query}")
                 println(">> ${it.variables}")
