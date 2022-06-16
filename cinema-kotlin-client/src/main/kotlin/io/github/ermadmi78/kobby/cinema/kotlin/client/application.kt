@@ -55,8 +55,9 @@ class Application : CommandLineRunner {
         val client = HttpClient {
             Auth {
                 basic {
-                    username = "admin"
-                    password = "admin"
+                    credentials {
+                        BasicAuthCredentials("admin", "admin")
+                    }
                 }
             }
             install(JsonFeature) {
