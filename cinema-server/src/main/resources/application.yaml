@@ -18,27 +18,11 @@ spring:
 graphql:
   tools:
     schema-location-pattern: io/github/ermadmi78/kobby/cinema/api/cinema.graphqls
-
----
-graphiql:
-  enabled: true
-  cdn:
-    enabled: false
-  headers:
-    Authorization: Basic YWRtaW46YWRtaW4=
-
----
-graphql.playground:
-  enabled: true
-  cdn:
-    enabled: false
-  settings:
-    request.credentials: include
-  headers:
-    Authorization: Basic YWRtaW46YWRtaW4=
-
----
-voyager:
-  enabled: true
-  cdn:
-    enabled: false
+  playground:
+    enabled: true
+    cdn:
+      enabled: false
+    settings:
+      request.credentials: include
+    headers:
+      Authorization: Basic YWRtaW46YWRtaW4=

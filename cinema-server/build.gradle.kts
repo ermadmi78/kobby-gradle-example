@@ -133,28 +133,10 @@ dependencies {
     implementation(project(":cinema-api"))
 
     implementation(
-        "com.graphql-java-kickstart:" +
-                "graphql-kickstart-spring-boot-starter-webflux:$graphqlJavaKickstartVersion"
+        "com.graphql-java-kickstart:graphql-spring-boot-starter:$graphqlJavaKickstartVersion"
     )
     implementation(
-        "com.graphql-java-kickstart:" +
-                "graphql-kickstart-spring-boot-starter-tools:$graphqlJavaKickstartVersion"
-    )
-    implementation(
-        "com.graphql-java-kickstart:" +
-                "graphiql-spring-boot-starter:$graphqlJavaKickstartVersion"
-    )
-    implementation(
-        "com.graphql-java-kickstart:" +
-                "playground-spring-boot-starter:$graphqlJavaKickstartVersion"
-    )
-    implementation(
-        "com.graphql-java-kickstart:" +
-                "voyager-spring-boot-starter:$graphqlJavaKickstartVersion"
-    )
-    implementation(
-        "com.graphql-java:" +
-                "graphql-java-extended-scalars:$graphqlJavaExtendedScalarsVersion"
+        "com.graphql-java:graphql-java-extended-scalars:$graphqlJavaExtendedScalarsVersion"
     ) {
         exclude("com.graphql-java", "graphql-java")
     }
