@@ -13,10 +13,12 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Gender
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 import io.ktor.client.*
-import io.ktor.client.features.auth.*
-import io.ktor.client.features.auth.providers.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.websocket.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -52,16 +54,17 @@ class Application : CommandLineRunner {
     //                                           Simple Adapter
     //******************************************************************************************************************
     private suspend fun simpleKtorAdapterExample() {
-        val client = HttpClient {
+        val client = HttpClient(CIO) {
             Auth {
                 basic {
                     credentials {
                         BasicAuthCredentials("admin", "admin")
                     }
+                    sendWithoutRequest { true }
                 }
             }
-            install(JsonFeature) {
-                serializer = JacksonSerializer {
+            install(ContentNegotiation) {
+                jackson {
                     registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
                     registerModule(JavaTimeModule())
                     // Force Jackson to serialize dates as String
@@ -281,12 +284,14 @@ class Application : CommandLineRunner {
                 is Film -> {
                     println("Film[$tags]: id=${cur.id}, title='${cur.title}' genre=${cur.genre}")
                 }
+
                 is Actor -> {
                     println(
                         "Actor[$tags]: ${cur.firstName} ${cur.lastName} (${cur.gender.name.lowercase()}) " +
                                 "from ${cur.country.name}"
                     )
                 }
+
                 else -> error("Invalid algorithm")
             }
         }
@@ -332,12 +337,14 @@ class Application : CommandLineRunner {
                 is Film -> {
                     println("Film: id=${cur.id}, title='${cur.title}' genre=${cur.genre}")
                 }
+
                 is Actor -> {
                     println(
                         "Actor: ${cur.firstName} ${cur.lastName} (${cur.gender.name.lowercase()}) " +
                                 "from ${cur.country.name}"
                     )
                 }
+
                 else -> error("Invalid algorithm")
             }
         }
@@ -371,7 +378,7 @@ class Application : CommandLineRunner {
     //                                           Composite Adapter
     //******************************************************************************************************************
     suspend fun compositeKtorAdapterExample() {
-        val client = HttpClient {
+        val client = HttpClient(CIO) {
             install(WebSockets)
         }
 
@@ -393,7 +400,7 @@ class Application : CommandLineRunner {
                     override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
                         mapper.readValue(content, contentType.java)
                 },
-                mapOf("Authorization" to "Basic YWRtaW46YWRtaW4="),
+                { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") },
                 subscriptionReceiveTimeoutMillis = 23000
             ) {
                 println(">> ${it.query}")

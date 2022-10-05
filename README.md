@@ -302,8 +302,9 @@ context.subscription {
 ## API Customization
 
 You can customize the generated GraphQL DSL by means of
-Kotlin [extension functions](https://kotlinlang.org/docs/extensions.html). Note that all generated entities implements
-DSL Context interface. So each entity is an entry point for executing GraphQL queries.
+Kotlin [extension functions](https://kotlinlang.org/docs/extensions.html). 
+Note that all generated entities contains `__context()` function that returns instance of DSL Context interface. 
+So each entity contains an entry point for executing GraphQL queries.
 
 **First, let extend our DSL Context (source code
 see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-api/src/main/kotlin/io/github/ermadmi78/kobby/cinema/api/kobby/kotlin/_CinemaContext.kt)):**
@@ -330,8 +331,8 @@ see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-ap
 ```kotlin
 suspend fun Country.refresh(
     __projection: (CountryProjection.() -> Unit)? = null
-): Country = 
-    query {
+): Country =
+    __context().query {
         country(id) {
             __projection?.invoke(this) ?: __withCurrentProjection()
         }
@@ -425,7 +426,7 @@ see [here](https://github.com/ermadmi78/kobby-gradle-example/blob/main/cinema-ap
 
 ```kotlin
 fun Country.onFilmCreated(__projection: FilmProjection.() -> Unit = {}): CinemaSubscriber<Film> =
-    onFilmCreated(id, __projection)
+    __context().onFilmCreated(id, __projection)
 ```
 
 **Ok, we are ready to listen new films in country:**

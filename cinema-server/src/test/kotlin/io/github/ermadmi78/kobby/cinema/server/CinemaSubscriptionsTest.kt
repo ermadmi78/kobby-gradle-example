@@ -20,7 +20,8 @@ import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.spring.SpringListener
 import io.ktor.client.*
-import io.ktor.client.features.websocket.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.websocket.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
@@ -50,7 +51,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
 
     @BeforeAll
     fun setUp() {
-        val client = HttpClient {
+        val client = HttpClient(CIO) {
             install(WebSockets)
         }
 
@@ -72,7 +73,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
                     override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
                         mapper.readValue(content, contentType.java)
                 },
-                mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=")
+                { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") }
             )
         )
     }

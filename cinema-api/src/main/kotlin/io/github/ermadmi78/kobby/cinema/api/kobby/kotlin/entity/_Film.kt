@@ -9,14 +9,14 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchFilm
  */
 
 suspend fun Film.refresh(__projection: (FilmProjection.() -> Unit)? = null): Film =
-    fetchFilm(id) {
+    __context().fetchFilm(id) {
         __projection?.invoke(this) ?: __withCurrentProjection()
     }
 
-suspend fun Film.addActor(actorId: Long): Boolean = mutation {
+suspend fun Film.addActor(actorId: Long): Boolean = __context().mutation {
     associate(id, actorId)
 }.associate
 
-suspend fun Film.tag(tagValue: String): Boolean = mutation {
+suspend fun Film.tag(tagValue: String): Boolean = __context().mutation {
     tagFilm(id, tagValue)
 }.tagFilm
