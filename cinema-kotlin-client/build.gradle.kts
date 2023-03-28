@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 description = "Cinema Kotlin Client Example"
@@ -11,27 +9,15 @@ plugins {
     id("org.springframework.boot")
 }
 
-val kotlinJvmVersion: String by project
+val kotlinJdkVersion: String by project
+kotlin {
+    jvmToolchain(kotlinJdkVersion.toInt())
+}
+
 val kotlinVersion: String by project
-val kotestVersion: String by project
 val jacksonVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
-
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = kotlinJvmVersion
-            freeCompilerArgs = listOf("-Xjsr305=strict")
-        }
-    }
-
-    test {
-        testLogging.showStandardStreams = true
-        testLogging.exceptionFormat = FULL
-        useJUnitPlatform()
-    }
-}
 
 dependencies {
     implementation(project(":cinema-api"))
@@ -55,8 +41,4 @@ dependencies {
     implementation(kotlin("reflect", kotlinVersion))
     testImplementation(kotlin("test", kotlinVersion))
     testImplementation(kotlin("test-junit5", kotlinVersion))
-
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-    testImplementation("io.kotest:kotest-property:$kotestVersion")
 }

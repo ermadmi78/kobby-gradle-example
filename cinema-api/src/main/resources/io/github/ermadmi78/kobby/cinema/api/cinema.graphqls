@@ -135,6 +135,15 @@ type Mutation {
         tags: TagInput
     ): Actor! @selection
 
+    """Update birthday of actor"""
+    updateBirthday(
+        """ID of the actor to update"""
+        actorId: ID!,
+
+        """New birthday"""
+        birthday: Date!
+    ): Actor
+
     """Associate film with actor"""
     associate(
         """ID of film"""

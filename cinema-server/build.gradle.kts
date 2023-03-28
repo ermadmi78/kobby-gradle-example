@@ -1,5 +1,4 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jooq.codegen.GenerationTool
 import org.jooq.meta.jaxb.*
 import org.jooq.meta.jaxb.Configuration
@@ -15,6 +14,11 @@ plugins {
     id("org.flywaydb.flyway")
 }
 
+val kotlinJdkVersion: String by project
+kotlin {
+    jvmToolchain(kotlinJdkVersion.toInt())
+}
+
 val flywayMigrationDir = file("${projectDir}/src/main/resources/db/migration")
 val jooqOutputDir = file("${project.buildDir}/generated/sources/jooq/main/java")
 val jooqSchemaDir = file("${project.buildDir}/jooq")
@@ -23,10 +27,10 @@ val jooqUrl = "jdbc:h2:${jooqSchemaDir.path}/${jooqSchema}"
 val jooqUser = "sa"
 val jooqPassword = ""
 
-val kotlinJvmVersion: String by project
 val kotlinVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val kotestVersion: String by project
+val kotestSpringVersion: String by project
 val flywaydbVersion: String by project
 val h2Version: String by project
 val jooqVersion: String by project
@@ -44,13 +48,6 @@ flyway {
 }
 
 tasks {
-    withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = kotlinJvmVersion
-            freeCompilerArgs = listOf("-Xjsr305=strict", "-opt-in=kotlin.RequiresOptIn")
-        }
-    }
-
     test {
         testLogging.showStandardStreams = true
         testLogging.exceptionFormat = FULL
@@ -165,8 +162,11 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")
-    testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestSpringVersion")
 
     testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     testImplementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
 }

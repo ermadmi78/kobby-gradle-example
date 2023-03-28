@@ -3,62 +3,80 @@ package io.github.ermadmi78.kobby.cinema.server
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.CinemaContext
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaSimpleKtorAdapter
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createCountry
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.spring.SpringListener
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.runBlocking
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.ApplicationContext
-import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.boot.web.server.LocalServerPort
 import java.time.LocalDate
 
 /**
  * Install Kotest plugin to run tests from IntelliJ IDEA
  * https://plugins.jetbrains.com/plugin/14080-kotest
  */
-@SpringBootTest(classes = [Application::class])
+@SpringBootTest(
+    classes = [Application::class],
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
 class CinemaServerTest : AnnotationSpec() {
-    @Autowired
-    lateinit var applicationContext: ApplicationContext
+    @LocalServerPort
+    var port: Int? = null
 
-    lateinit var cinemaContext: CinemaContext
+    lateinit var context: CinemaContext
 
-
-    override fun listeners() = listOf(SpringListener)
+    override fun extensions() = listOf(SpringExtension)
 
     @BeforeAll
     fun setUp() {
-        cinemaContext = cinemaContextOf(
-            CinemaTestAdapter(
-                WebTestClient.bindToApplicationContext(applicationContext).build(),
-                jacksonObjectMapper()
-                    .registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                    .registerModule(JavaTimeModule())
+        val client = HttpClient(CIO) {
+            Auth {
+                basic {
+                    credentials {
+                        BasicAuthCredentials("admin", "admin")
+                    }
+                    sendWithoutRequest { true }
+                }
+            }
+            install(ContentNegotiation) {
+                jackson {
+                    registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+                    registerModule(JavaTimeModule())
                     // Force Jackson to serialize dates as String
-                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            )
+                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                }
+            }
+        }
+
+        context = cinemaContextOf(
+            CinemaSimpleKtorAdapter(client, "http://localhost:${port!!}/graphql")
         )
     }
 
     @Test
     fun createCountryWithFilmAndActorsByMeansOfGeneratedAPI() = runBlocking {
-        val country = cinemaContext.mutation {
+        val country = context.mutation {
             createCountry("USSR")
         }.createCountry
 
         country.name shouldBe "USSR"
 
-        val film = cinemaContext.mutation {
+        val film = context.mutation {
             createFilm(country.id, FilmInput("Hedgehog in the fog")) {
                 // tags is selection argument - see @selection directive
                 tags = TagInput {
@@ -84,7 +102,7 @@ class CinemaServerTest : AnnotationSpec() {
         film.country.name shouldBe "USSR"
         film.toString() shouldBe "Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${film.countryId}, country=Country(id=${film.country.id}, name=USSR))"
 
-        val actor = cinemaContext.mutation {
+        var actor = context.mutation {
             createActor(country.id, ActorInput {
                 firstName = "Hedgehog"
                 birthday = LocalDate.of(1975, 3, 15)
@@ -108,23 +126,43 @@ class CinemaServerTest : AnnotationSpec() {
         actor.country.name shouldBe "USSR"
         actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
 
-        cinemaContext.mutation {
+        actor = context.mutation {
+            updateBirthday(actor.id, LocalDate.of(1976, 4, 16)) {
+                gender()
+                country()
+                tags {
+                    value()
+                }
+            }
+        }.updateBirthday!!
+
+        actor.firstName shouldBe "Hedgehog"
+        actor.lastName shouldBe null
+        actor.birthday shouldBe LocalDate.of(1976, 4, 16)
+        actor.gender shouldBe Gender.MALE
+        actor.tags.isEmpty() shouldBe true
+        actor.countryId shouldBe country.id
+        actor.country.id shouldBe country.id
+        actor.country.name shouldBe "USSR"
+        actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1976-04-16, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
+
+        context.mutation {
             associate(film.id, actor.id)
         }.associate shouldBe true
 
-        cinemaContext.mutation {
+        context.mutation {
             associate(film.id, actor.id)
         }.associate shouldBe false
 
-        cinemaContext.mutation {
+        context.mutation {
             tagFilm(film.id, "cool")
         }.tagFilm shouldBe false
 
-        cinemaContext.mutation {
+        context.mutation {
             tagActor(actor.id, "cool")
         }.tagActor shouldBe true
 
-        val ussr = cinemaContext.query {
+        val ussr = context.query {
             country(country.id) {
                 films {
                     limit = -1
@@ -165,7 +203,7 @@ class CinemaServerTest : AnnotationSpec() {
 
                 filmActors[0].firstName shouldBe "Hedgehog"
                 filmActors[0].lastName shouldBe null
-                filmActors[0].birthday shouldBe LocalDate.of(1975, 3, 15)
+                filmActors[0].birthday shouldBe LocalDate.of(1976, 4, 16)
                 filmActors[0].gender shouldBe Gender.MALE
                 filmActors[0].countryId shouldBe country.id
                 filmActors[0].country.id shouldBe country.id
@@ -176,12 +214,12 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }
-        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
+        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1976-04-16, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
     }
 
     @Test
     fun createCountryWithFilmAndActorsByMeansOfCustomizedAPI() = runBlocking {
-        val country = cinemaContext.createCountry("USSR")
+        val country = context.createCountry("USSR")
 
         country.name shouldBe "USSR"
 
@@ -209,7 +247,7 @@ class CinemaServerTest : AnnotationSpec() {
         film.country.name shouldBe "USSR"
         film.toString() shouldBe "Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${film.countryId}, country=Country(id=${film.country.id}, name=USSR))"
 
-        val actor = country.createActor(ActorInput {
+        var actor = country.createActor(ActorInput {
             firstName = "Hedgehog"
             birthday = LocalDate.of(1975, 3, 15)
             gender = Gender.MALE
@@ -230,6 +268,18 @@ class CinemaServerTest : AnnotationSpec() {
         actor.country.id shouldBe country.id
         actor.country.name shouldBe "USSR"
         actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
+
+        actor = actor.updateBirthday(LocalDate.of(1976, 4, 16))
+
+        actor.firstName shouldBe "Hedgehog"
+        actor.lastName shouldBe null
+        actor.birthday shouldBe LocalDate.of(1976, 4, 16)
+        actor.gender shouldBe Gender.MALE
+        actor.tags.isEmpty() shouldBe true
+        actor.countryId shouldBe country.id
+        actor.country.id shouldBe country.id
+        actor.country.name shouldBe "USSR"
+        actor.toString() shouldBe "Actor(id=${actor.id}, tags=[], firstName=Hedgehog, lastName=null, birthday=1976-04-16, gender=MALE, countryId=${actor.countryId}, country=Country(id=${actor.country.id}, name=USSR))"
 
         film.addActor(actor.id) shouldBe true
         actor.addFilm(film.id) shouldBe false
@@ -276,7 +326,7 @@ class CinemaServerTest : AnnotationSpec() {
 
                 filmActors[0].firstName shouldBe "Hedgehog"
                 filmActors[0].lastName shouldBe null
-                filmActors[0].birthday shouldBe LocalDate.of(1975, 3, 15)
+                filmActors[0].birthday shouldBe LocalDate.of(1976, 4, 16)
                 filmActors[0].gender shouldBe Gender.MALE
                 filmActors[0].countryId shouldBe country.id
                 filmActors[0].country.id shouldBe country.id
@@ -287,12 +337,12 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }
-        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1975-03-15, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
+        ussr.toString() shouldBe "Country(id=${country.id}, name=USSR, films=[Film(id=${film.id}, tags=[Tag(value=cool)], title=Hedgehog in the fog, genre=DRAMA, countryId=${country.id}, country=Country(id=${country.id}, name=USSR), actors=[Actor(id=${actor.id}, tags=[Tag(value=cool)], firstName=Hedgehog, lastName=null, birthday=1976-04-16, gender=MALE, countryId=${country.id}, country=Country(id=${country.id}, name=USSR))])])"
     }
 
     @Test
     fun simpleQuery() = runBlocking {
-        val country = cinemaContext.query {
+        val country = context.query {
             country(0)
         }.country!!
 
@@ -303,7 +353,7 @@ class CinemaServerTest : AnnotationSpec() {
             country.fields
         }.message shouldBe "Property [fields] is not available - add [fields] projection to switch on it"
 
-        val films = cinemaContext.query {
+        val films = context.query {
             films {
                 genre = Genre.COMEDY
                 offset = 2
@@ -334,7 +384,7 @@ class CinemaServerTest : AnnotationSpec() {
             fields shouldContainExactly mapOf("title" to "Peter's Friends", "genre" to "COMEDY")
         }
 
-        val actors = cinemaContext.query {
+        val actors = context.query {
             actors {
                 gender = Gender.FEMALE
                 birthdayFrom = LocalDate.of(1967, 1, 1)
@@ -361,7 +411,7 @@ class CinemaServerTest : AnnotationSpec() {
 
     @Test
     fun complexQuery() = runBlocking {
-        val usa = cinemaContext.query {
+        val usa = context.query {
             country(18) {
                 films {
                     title = "d"
@@ -458,7 +508,7 @@ class CinemaServerTest : AnnotationSpec() {
 
     @Test
     fun interfaceQuery() = runBlocking {
-        val list = cinemaContext.query {
+        val list = context.query {
             taggable("julia") {
                 tags {
                     value()
@@ -522,7 +572,7 @@ class CinemaServerTest : AnnotationSpec() {
 
     @Test
     fun unionQuery() = runBlocking {
-        val list = cinemaContext.query {
+        val list = context.query {
             country(17) {
                 __minimize()
                 native {
@@ -581,7 +631,7 @@ class CinemaServerTest : AnnotationSpec() {
 
     @Test
     fun unqualifiedInterfaceQuery() = runBlocking {
-        val list = cinemaContext.query {
+        val list = context.query {
             taggable("julia") {
                 tags {
                     value()
@@ -623,7 +673,7 @@ class CinemaServerTest : AnnotationSpec() {
 
     @Test
     fun unqualifiedUnionQuery() = runBlocking {
-        val list = cinemaContext.query {
+        val list = context.query {
             country(17) {
                 native()
             }

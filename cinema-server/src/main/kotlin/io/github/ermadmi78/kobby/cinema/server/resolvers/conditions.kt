@@ -59,7 +59,7 @@ fun Condition.andActors(
 }
 
 fun filmTagsContains(tag: String): Condition =
-    DSL.field("ARRAY_CONTAINS({0}, {1})", Boolean::class.java, FILM.TAGS, tag).eq(true)
+    DSL.field("LOCATE({0}, {1})", Int::class.java, tag, FILM.TAGS).gt(0)
 
 fun actorTagsContains(tag: String): Condition =
-    DSL.field("ARRAY_CONTAINS({0}, {1})", Boolean::class.java, ACTOR.TAGS, tag).eq(true)
+    DSL.field("LOCATE({0}, {1})", Int::class.java, tag, ACTOR.TAGS).gt(0)

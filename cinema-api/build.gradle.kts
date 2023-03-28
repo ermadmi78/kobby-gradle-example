@@ -17,14 +17,9 @@ kobby {
     }
 }
 
-val kotlinJvmVersion: String by project
-tasks {
-    compileKotlin {
-        kotlinOptions {
-            jvmTarget = kotlinJvmVersion
-            freeCompilerArgs = listOf("-Xjsr305=strict")
-        }
-    }
+val kotlinJdkVersion: String by project
+kotlin {
+    jvmToolchain(kotlinJdkVersion.toInt())
 }
 
 val jacksonVersion: String by project
@@ -45,7 +40,7 @@ dependencies {
     // Add this dependency to enable subscription resolver publisher generation
     compileOnly("org.reactivestreams:reactive-streams:$reactivestreamsVersion")
 
-    // Add this dependencies to remove warning "Runtime JAR files in the classpath should have the same version"
+    // Add these dependencies to remove warning "Runtime JAR files in the classpath should have the same version"
     compileOnly(kotlin("stdlib", kotlinVersion))
     compileOnly(kotlin("stdlib-jdk7", kotlinVersion))
     compileOnly(kotlin("reflect", kotlinVersion))

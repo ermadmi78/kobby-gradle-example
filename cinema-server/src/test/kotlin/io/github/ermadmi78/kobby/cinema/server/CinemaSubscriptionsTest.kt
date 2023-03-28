@@ -17,8 +17,8 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.createFilm
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.onActorCreated
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.onFilmCreated
 import io.kotest.core.spec.style.AnnotationSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
-import io.kotest.spring.SpringListener
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -47,7 +47,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
 
     lateinit var context: CinemaContext
 
-    override fun listeners() = listOf(SpringListener)
+    override fun extensions() = listOf(SpringExtension)
 
     @BeforeAll
     fun setUp() {

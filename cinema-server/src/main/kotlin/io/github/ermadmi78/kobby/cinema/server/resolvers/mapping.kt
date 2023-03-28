@@ -24,9 +24,8 @@ fun FilmRecord.toDto() = FilmDto {
     title = getTitle()
     genre = getGenre()?.toDto()
     tags = getTags()
-        ?.asSequence()
-        ?.filterNotNull()
-        ?.map { it.toString().trim() }
+        ?.splitToSequence(',')
+        ?.map { it.trim() }
         ?.filter { it.isNotEmpty() }
         ?.map { TagDto(it) }
         ?.toList()
@@ -41,9 +40,8 @@ fun ActorRecord.toDto() = ActorDto {
     birthday = getBirthday()
     gender = getGender()?.toDto()
     tags = getTags()
-        ?.asSequence()
-        ?.filterNotNull()
-        ?.map { it.toString().trim() }
+        ?.splitToSequence(',')
+        ?.map { it.trim() }
         ?.filter { it.isNotEmpty() }
         ?.map { TagDto(it) }
         ?.toList()

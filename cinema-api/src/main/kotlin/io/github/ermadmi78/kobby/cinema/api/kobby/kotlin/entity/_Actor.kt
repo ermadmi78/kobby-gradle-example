@@ -1,6 +1,8 @@
 package io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity
 
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.fetchActor
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.updateBirthday
+import java.time.LocalDate
 
 /**
  * Created on 21.05.2021
@@ -20,3 +22,10 @@ suspend fun Actor.addFilm(filmId: Long): Boolean = __context().mutation {
 suspend fun Actor.tag(tagValue: String): Boolean = __context().mutation {
     tagActor(id, tagValue)
 }.tagActor
+
+suspend fun Actor.updateBirthday(
+    birthday: LocalDate,
+    __projection: (ActorProjection.() -> Unit)? = null
+): Actor = __context().updateBirthday(id, birthday) {
+    __projection?.invoke(this) ?: __withCurrentProjection()
+} ?: error("Cannot find actor by id = $id")

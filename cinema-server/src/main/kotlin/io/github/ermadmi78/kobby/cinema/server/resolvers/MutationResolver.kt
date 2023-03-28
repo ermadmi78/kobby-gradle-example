@@ -8,6 +8,7 @@ import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 /**
  * Created on 03.03.2021
@@ -43,7 +44,7 @@ class MutationResolver(
             .set(FILM.COUNTRY_ID, countryId)
             .set(FILM.TITLE, film.title)
             .set(FILM.GENRE, film.genre.toRecord())
-            .set(FILM.TAGS, if (tags == null) arrayOf<Any>() else arrayOf<Any>(tags.value))
+            .set(FILM.TAGS, tags?.value ?: "")
             .returning()
             .fetchOne()!!
             .toDto()
@@ -63,13 +64,25 @@ class MutationResolver(
             .set(ACTOR.LAST_NAME, actor.lastName)
             .set(ACTOR.BIRTHDAY, actor.birthday)
             .set(ACTOR.GENDER, actor.gender.toRecord())
-            .set(ACTOR.TAGS, if (tags == null) arrayOf<Any>() else arrayOf<Any>(tags.value))
+            .set(ACTOR.TAGS, tags?.value ?: "")
             .returning()
             .fetchOne()!!
             .toDto()
 
         eventBus.fireActorCreated(newActor)
         newActor
+    }
+
+    override suspend fun updateBirthday(
+        actorId: Long,
+        birthday: LocalDate
+    ): ActorDto? = hasAnyRole("ADMIN") {
+        dslContext.update(ACTOR)
+            .set(ACTOR.BIRTHDAY, birthday)
+            .where(ACTOR.ID.eq(actorId))
+            .returning()
+            .fetchOne()
+            ?.toDto()
     }
 
     override suspend fun associate(
@@ -88,7 +101,7 @@ class MutationResolver(
         tagValue: String
     ): Boolean = hasAnyRole("ADMIN") {
         dslContext.update(FILM)
-            .set(FILM.TAGS, DSL.function("ARRAY_APPEND", FILM.TAGS.dataType, FILM.TAGS, DSL.`val`(tagValue)))
+            .set(FILM.TAGS, DSL.function("CONCAT", FILM.TAGS.dataType, FILM.TAGS, DSL.`val`(tagValue)))
             .where(FILM.ID.eq(filmId))
             .and(filmTagsContains(tagValue).not())
             .execute() == 1
@@ -99,7 +112,7 @@ class MutationResolver(
         tagValue: String
     ): Boolean = hasAnyRole("ADMIN") {
         dslContext.update(ACTOR)
-            .set(ACTOR.TAGS, DSL.function("ARRAY_APPEND", ACTOR.TAGS.dataType, ACTOR.TAGS, DSL.`val`(tagValue)))
+            .set(ACTOR.TAGS, DSL.function("CONCAT", ACTOR.TAGS.dataType, ACTOR.TAGS, DSL.`val`(tagValue)))
             .where(ACTOR.ID.eq(actorId))
             .and(actorTagsContains(tagValue).not())
             .execute() == 1

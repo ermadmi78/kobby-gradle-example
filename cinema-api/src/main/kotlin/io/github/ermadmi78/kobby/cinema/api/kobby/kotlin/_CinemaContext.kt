@@ -3,6 +3,7 @@ package io.github.ermadmi78.kobby.cinema.api.kobby.kotlin
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmInput
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
+import java.time.LocalDate
 
 /**
  * Created on 13.03.2021
@@ -65,6 +66,15 @@ suspend fun CinemaContext.createActor(
     mutation {
         createActor(countryId, actor, __query)
     }.createActor
+
+suspend fun CinemaContext.updateBirthday(
+    actorId: Long,
+    birthday: LocalDate,
+    __projection: ActorProjection.() -> Unit = {}
+): Actor? =
+    mutation {
+        updateBirthday(actorId, birthday, __projection)
+    }.updateBirthday
 
 //**********************************************************************************************************************
 
