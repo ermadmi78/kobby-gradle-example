@@ -5,6 +5,9 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaCountryR
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.ACTOR
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.FILM
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jooq.DSLContext
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -23,16 +26,13 @@ class CountryResolver(private val dslContext: DSLContext) : CinemaCountryResolve
     override suspend fun fields(
         country: CountryDto,
         keys: List<String>?
-    ): Map<String, Any?> {
-        val result = mutableMapOf<String, Any?>()
+    ): JsonObject = buildJsonObject {
         (keys?.toSet() ?: ALL_FIELDS).forEach {
             when (it) {
-                "id" -> result[it] = country.id
-                "name" -> result[it] = country.name
+                "id" -> put(it, country.id)
+                "name" -> put(it, country.name)
             }
         }
-
-        return result
     }
 
     override suspend fun film(

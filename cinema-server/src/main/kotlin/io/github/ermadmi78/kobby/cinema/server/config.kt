@@ -5,6 +5,7 @@ import graphql.kickstart.tools.CoroutineContextProvider
 import graphql.scalars.ExtendedScalars
 import graphql.schema.GraphQLScalarType
 import io.github.ermadmi78.kobby.cinema.server.resolvers.QueryResolver
+import io.github.ermadmi78.kobby.cinema.server.scalars.JSONScalar
 import io.github.ermadmi78.kobby.cinema.server.security.SecuredGraphQLContextBuilder
 import io.github.ermadmi78.kobby.cinema.server.security.getBasicAuthentication
 import kotlinx.coroutines.CoroutineDispatcher
@@ -47,7 +48,7 @@ class ApplicationConfiguration {
      * scalar JSON support
      */
     @Bean
-    fun scalarJson(): GraphQLScalarType = ExtendedScalars.Json
+    fun scalarJson(): GraphQLScalarType = JSONScalar.INSTANCE
 
     /**
      * scalar Date support

@@ -7,6 +7,9 @@ import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Gender
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaFilmResolver
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
 import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
 import org.springframework.stereotype.Component
@@ -26,17 +29,14 @@ class FilmResolver(private val dslContext: DSLContext) : CinemaFilmResolver {
     override suspend fun fields(
         film: FilmDto,
         keys: List<String>?
-    ): Map<String, Any?> {
-        val result = mutableMapOf<String, Any?>()
+    ): JsonObject = buildJsonObject {
         (keys?.toSet() ?: ALL_FIELDS).forEach {
             when (it) {
-                "id" -> result[it] = film.id
-                "title" -> result[it] = film.title
-                "genre" -> result[it] = film.genre
+                "id" -> put(it, film.id)
+                "title" -> put(it, film.title)
+                "genre" -> put(it, film.genre?.name)
             }
         }
-
-        return result
     }
 
     override suspend fun country(film: FilmDto): CountryDto = hasAnyRole("USER", "ADMIN") {

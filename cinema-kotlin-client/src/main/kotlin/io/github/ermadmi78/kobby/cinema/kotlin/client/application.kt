@@ -1,10 +1,5 @@
 package io.github.ermadmi78.kobby.cinema.kotlin.client
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaCompositeKtorAdapter
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaSimpleKtorAdapter
@@ -18,13 +13,12 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
-import io.ktor.serialization.jackson.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.time.LocalDate
-import kotlin.reflect.KClass
 
 /**
  * Created on 03.03.2021
@@ -64,12 +58,7 @@ class Application : CommandLineRunner {
                 }
             }
             install(ContentNegotiation) {
-                jackson {
-                    registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                    registerModule(JavaTimeModule())
-                    // Force Jackson to serialize dates as String
-                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                }
+                json(cinemaJson)
             }
         }
 
@@ -382,25 +371,12 @@ class Application : CommandLineRunner {
             install(WebSockets)
         }
 
-        val mapper = jacksonObjectMapper()
-            .registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-            .registerModule(JavaTimeModule())
-            // Force Jackson to serialize dates as String
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-
         val context = cinemaContextOf(
             CinemaCompositeKtorAdapter(
                 client,
                 "http://localhost:8080/graphql",
                 "ws://localhost:8080/subscriptions",
-                object : CinemaMapper {
-                    override fun serialize(value: Any): String =
-                        mapper.writeValueAsString(value)
-
-                    override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
-                        mapper.readValue(content, contentType.java)
-                },
-                { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") },
+                requestHeaders = { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") },
                 subscriptionReceiveTimeoutMillis = 23000
             ) {
                 println(">> ${it.query}")

@@ -4,15 +4,20 @@ description = "Cinema API Example"
 
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     `java-library`
-    id("io.github.ermadmi78.kobby") version "2.1.1"
+    id("io.github.ermadmi78.kobby") version "3.0.0-beta.01"
 }
 
 kobby {
     kotlin {
         scalars = mapOf(
-            "Date" to typeOf("java.time", "LocalDate"),
-            "JSON" to typeMap.parameterize(typeString, typeAny.nullable())
+            "Date" to typeOf("java.time", "LocalDate")
+                .serializer(
+                    "io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto",
+                    "LocalDateSerializer"
+                ),
+            "JSON" to typeOf("kotlinx.serialization.json", "JsonObject")
         )
     }
 }
@@ -22,14 +27,14 @@ kotlin {
     jvmToolchain(kotlinJdkVersion.toInt())
 }
 
-val jacksonVersion: String by project
+val serializationVersion: String by project
 val ktorVersion: String by project
 val graphqlJavaToolsVersion: String by project
 val reactivestreamsVersion: String by project
 val kotlinVersion: String by project
 dependencies {
-    // Add this dependency to enable Jackson annotation generation in DTO classes by Kobby
-    compileOnly("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    // Add this dependency to enable Kotlinx Serialization
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
 
     // Add this dependency to enable default Ktor adapters generation
     compileOnly("io.ktor:ktor-client-cio:$ktorVersion")

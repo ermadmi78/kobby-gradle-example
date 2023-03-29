@@ -34,7 +34,7 @@ val kotestSpringVersion: String by project
 val flywaydbVersion: String by project
 val h2Version: String by project
 val jooqVersion: String by project
-val jacksonVersion: String by project
+val serializationVersion: String by project
 val commonsLang3Version: String by project
 val graphqlJavaKickstartVersion: String by project
 val graphqlJavaExtendedScalarsVersion: String by project
@@ -150,7 +150,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flywaydbVersion")
     implementation("com.h2database:h2:$h2Version")
 
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
 
     implementation(kotlin("stdlib", kotlinVersion))
@@ -166,7 +166,7 @@ dependencies {
 
     testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    testImplementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    testImplementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     testImplementation("io.ktor:ktor-client-websockets:$ktorVersion")
     testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
 }

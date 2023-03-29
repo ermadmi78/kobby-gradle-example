@@ -1,12 +1,9 @@
 package io.github.ermadmi78.kobby.cinema.server
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.CinemaContext
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaSimpleKtorAdapter
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaContextOf
+import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.cinemaJson
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.createCountry
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.entity.*
@@ -20,8 +17,10 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.jackson.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import java.time.LocalDate
@@ -54,12 +53,7 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
             install(ContentNegotiation) {
-                jackson {
-                    registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                    registerModule(JavaTimeModule())
-                    // Force Jackson to serialize dates as String
-                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                }
+                json(cinemaJson)
             }
         }
 
@@ -374,14 +368,20 @@ class CinemaServerTest : AnnotationSpec() {
             shouldThrow<IllegalStateException> {
                 this.country
             }.message shouldBe "Property [country] is not available - add [country] projection to switch on it"
-            fields shouldContainExactly mapOf("title" to "House", "genre" to "COMEDY")
+            fields shouldContainExactly buildJsonObject {
+                put("title", "House")
+                put("genre", "COMEDY")
+            }
         }
         films[1].apply {
             id shouldBe 5
             title shouldBe "Peter's Friends"
             genre shouldBe Genre.COMEDY
             countryId shouldBe 17
-            fields shouldContainExactly mapOf("title" to "Peter's Friends", "genre" to "COMEDY")
+            fields shouldContainExactly buildJsonObject {
+                put("title", "Peter's Friends")
+                put("genre", "COMEDY")
+            }
         }
 
         val actors = context.query {

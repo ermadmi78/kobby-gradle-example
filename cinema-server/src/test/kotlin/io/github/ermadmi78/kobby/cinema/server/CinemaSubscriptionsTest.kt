@@ -1,10 +1,5 @@
 package io.github.ermadmi78.kobby.cinema.server
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.*
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.adapter.ktor.CinemaCompositeKtorAdapter
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorInput
@@ -26,7 +21,6 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import java.time.LocalDate
-import kotlin.reflect.KClass
 
 
 /**
@@ -55,25 +49,12 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
             install(WebSockets)
         }
 
-        val mapper = jacksonObjectMapper()
-            .registerModule(ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-            .registerModule(JavaTimeModule())
-            // Force Jackson to serialize dates as String
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-
         context = cinemaContextOf(
             CinemaCompositeKtorAdapter(
                 client,
                 "http://localhost:${port!!}/graphql",
                 "ws://localhost:${port!!}/subscriptions",
-                object : CinemaMapper {
-                    override fun serialize(value: Any): String =
-                        mapper.writeValueAsString(value)
-
-                    override fun <T : Any> deserialize(content: String, contentType: KClass<T>): T =
-                        mapper.readValue(content, contentType.java)
-                },
-                { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") }
+                requestHeaders = { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") }
             )
         )
     }
