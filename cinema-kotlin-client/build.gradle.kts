@@ -37,6 +37,4 @@ dependencies {
 
     implementation(kotlin("stdlib", kotlinVersion))
     implementation(kotlin("reflect", kotlinVersion))
-    testImplementation(kotlin("test", kotlinVersion))
-    testImplementation(kotlin("test-junit5", kotlinVersion))
 }

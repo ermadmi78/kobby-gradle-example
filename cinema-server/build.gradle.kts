@@ -12,6 +12,7 @@ plugins {
     `java-library`
     id("org.springframework.boot")
     id("org.flywaydb.flyway")
+    id("com.adarshr.test-logger")
 }
 
 val kotlinJdkVersion: String by project
