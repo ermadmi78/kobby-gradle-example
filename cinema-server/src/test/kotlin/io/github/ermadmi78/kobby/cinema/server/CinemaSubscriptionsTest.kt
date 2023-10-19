@@ -19,7 +19,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
 import java.time.LocalDate
 
 
@@ -84,20 +84,20 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
 
         // Created films subscription
         context.subscription {
-            filmCreated(1) {
+            filmCreated(2) {
                 genre()
                 country()
             }
         }.subscribe {
             // Create films
             context.mutation {
-                createFilm(1, FilmInput("First", COMEDY))
+                createFilm(2, FilmInput("First", COMEDY))
             }
             context.mutation {
-                createFilm(5, FilmInput("Second", THRILLER))
+                createFilm(6, FilmInput("Second", THRILLER))
             }
             context.mutation {
-                createFilm(1, FilmInput("Third", HORROR))
+                createFilm(2, FilmInput("Third", HORROR))
             }
 
             // Listen created films
@@ -115,7 +115,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
 
         // Created actors subscription
         context.subscription {
-            actorCreated(1) {
+            actorCreated(2) {
                 gender()
                 country()
             }
@@ -123,7 +123,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
             // Create actors
             val now = LocalDate.now()
             context.mutation {
-                createActor(1, ActorInput {
+                createActor(2, ActorInput {
                     firstName = "First"
                     lastName = "Actress"
                     birthday = now
@@ -131,7 +131,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
                 })
             }
             context.mutation {
-                createActor(5, ActorInput {
+                createActor(6, ActorInput {
                     firstName = "Second"
                     lastName = "Actress"
                     birthday = now
@@ -139,7 +139,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
                 })
             }
             context.mutation {
-                createActor(1, ActorInput {
+                createActor(2, ActorInput {
                     firstName = "Third"
                     lastName = "Actor"
                     birthday = now
@@ -181,8 +181,8 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
         }
 
         // Prepare countries
-        val australia = context.fetchCountry(1)
-        val canada = context.fetchCountry(5)
+        val australia = context.fetchCountry(2)
+        val canada = context.fetchCountry(6)
 
         // Created films subscription
         australia.onFilmCreated { genre(); country() }.subscribe {

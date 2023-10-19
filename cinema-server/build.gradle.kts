@@ -21,8 +21,8 @@ kotlin {
 }
 
 val flywayMigrationDir = file("${projectDir}/src/main/resources/db/migration")
-val jooqOutputDir = file("${project.buildDir}/generated/sources/jooq/main/java")
-val jooqSchemaDir = file("${project.buildDir}/jooq")
+val jooqOutputDir = file("${projectDir}/build/generated/sources/jooq/main/java")
+val jooqSchemaDir = file("${projectDir}/build/jooq")
 val jooqSchema = "cinema"
 val jooqUrl = "jdbc:h2:${jooqSchemaDir.path}/${jooqSchema}"
 val jooqUser = "sa"

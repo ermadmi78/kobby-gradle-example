@@ -83,9 +83,9 @@ class Application : CommandLineRunner {
         println()
 
         // query($arg0: ID!) { country(id: $arg0) { id name } }
-        // {arg0=1}
+        // {arg0=2}
         context.query {
-            country(1) {
+            country(2) {
                 // id is primary key (see @primaryKey directive in schema)
                 // name is default (see @default directive in schema)
             }
@@ -120,9 +120,9 @@ class Application : CommandLineRunner {
         println()
 
         // query($arg0: ID!) { film(id: $arg0) { id title countryId } }
-        // {arg0=0}
+        // {arg0=1}
         context.query {
-            film(0) {
+            film(1) {
                 // id is primary key
                 // title is default
                 // countryId is required
@@ -161,9 +161,9 @@ class Application : CommandLineRunner {
         println()
 
         // query($arg0: ID!, $arg1: String, $arg2: Int!, $arg3: String, $arg4: Date, $arg5: [String!], $arg6: Int!) { country(id: $arg0) { id name films(title: $arg1) { id title genre countryId actors(limit: $arg2) { id firstName lastName birthday gender countryId country { id name } } } actors(firstName: $arg3, birthdayFrom: $arg4) { id fields(keys: $arg5) firstName lastName birthday gender countryId films(limit: $arg6) { id title countryId } } } }
-        // {arg0=7, arg1=d, arg2=-1, arg3=d, arg4=1970-01-01, arg5=[birthday, gender], arg6=-1}
+        // {arg0=8, arg1=d, arg2=-1, arg3=d, arg4=1970-01-01, arg5=[birthday, gender], arg6=-1}
         context.query {
-            country(7) {
+            country(8) {
                 // id is primary key
                 // name is default
                 films {
@@ -294,9 +294,9 @@ class Application : CommandLineRunner {
         println()
 
         // query($arg0: ID!) { country(id: $arg0) { id native { __typename ... on Film { id title genre countryId } ... on Actor { id firstName lastName birthday gender countryId country { id name } } } } }
-        // {arg0=17}
+        // {arg0=18}
         context.query {
-            country(17) {
+            country(18) {
                 __minimize() // switch off defaults to minimize query
                 // id is primary key
                 native {
@@ -347,7 +347,7 @@ class Application : CommandLineRunner {
         println()
 
         println(">> Fetch country by id")
-        val country = context.fetchCountry(7)
+        val country = context.fetchCountry(8)
         println("Country: id=${country.id} name='${country.name}'")
 
         println()
@@ -423,14 +423,14 @@ class Application : CommandLineRunner {
         println()
 
         context.subscription {
-            filmCreated(countryId = 1) {
+            filmCreated(countryId = 2) {
                 country()
             }
         }.subscribe {
             println()
-            context.createFilm(1, FilmInput("First"))
-            context.createFilm(0, FilmInput("Second"))
-            context.createFilm(1, FilmInput("Third"))
+            context.createFilm(2, FilmInput("First"))
+            context.createFilm(1, FilmInput("Second"))
+            context.createFilm(2, FilmInput("Third"))
             println()
 
             for (i in 1..2) {
@@ -448,8 +448,8 @@ class Application : CommandLineRunner {
         println("******************************************************************")
         println()
 
-        val brazil: Country = context.fetchCountry(4)
-        val spain: Country = context.fetchCountry(15)
+        val brazil: Country = context.fetchCountry(5)
+        val spain: Country = context.fetchCountry(16)
         spain.onActorCreated { gender(); country() }.subscribe {
             println()
             spain.createActor(ActorInput {

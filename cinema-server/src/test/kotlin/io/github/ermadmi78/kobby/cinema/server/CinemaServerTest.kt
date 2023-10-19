@@ -22,7 +22,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
 import java.time.LocalDate
 
 /**
@@ -337,10 +337,10 @@ class CinemaServerTest : AnnotationSpec() {
     @Test
     fun simpleQuery() = runBlocking {
         val country = context.query {
-            country(0)
+            country(1)
         }.country!!
 
-        country.id shouldBe 0
+        country.id shouldBe 1
         country.name shouldBe "Argentina"
 
         shouldThrow<IllegalStateException> {
@@ -361,10 +361,10 @@ class CinemaServerTest : AnnotationSpec() {
 
         films.size shouldBe 2
         films[0].apply {
-            id shouldBe 4
+            id shouldBe 5
             title shouldBe "House"
             genre shouldBe Genre.COMEDY
-            countryId shouldBe 17
+            countryId shouldBe 18
             shouldThrow<IllegalStateException> {
                 this.country
             }.message shouldBe "Property [country] is not available - add [country] projection to switch on it"
@@ -374,10 +374,10 @@ class CinemaServerTest : AnnotationSpec() {
             }
         }
         films[1].apply {
-            id shouldBe 5
+            id shouldBe 6
             title shouldBe "Peter's Friends"
             genre shouldBe Genre.COMEDY
-            countryId shouldBe 17
+            countryId shouldBe 18
             fields shouldContainExactly buildJsonObject {
                 put("title", "Peter's Friends")
                 put("genre", "COMEDY")
@@ -394,14 +394,14 @@ class CinemaServerTest : AnnotationSpec() {
         }.actors
         actors.size shouldBe 2
         actors[0].apply {
-            id shouldBe 0
+            id shouldBe 1
             firstName shouldBe "Audrey"
             lastName shouldBe "Tautou"
             gender shouldBe Gender.FEMALE
             birthday shouldBe LocalDate.of(1976, 8, 9)
         }
         actors[1].apply {
-            id shouldBe 10
+            id shouldBe 11
             firstName shouldBe "Julia"
             lastName shouldBe "Roberts"
             gender shouldBe Gender.FEMALE
@@ -412,7 +412,7 @@ class CinemaServerTest : AnnotationSpec() {
     @Test
     fun complexQuery() = runBlocking {
         val usa = context.query {
-            country(18) {
+            country(19) {
                 films {
                     title = "d"
                     genre()
@@ -432,36 +432,36 @@ class CinemaServerTest : AnnotationSpec() {
                 }
             }
         }.country!!
-        usa.id shouldBe 18
+        usa.id shouldBe 19
         usa.name shouldBe "USA"
 
         val usaFilms = usa.films
         usaFilms.size shouldBe 1
         usaFilms[0].also { film ->
-            film.id shouldBe 11
+            film.id shouldBe 12
             film.title shouldBe "From Dusk Till Dawn"
             film.genre shouldBe Genre.THRILLER
-            film.countryId shouldBe 18
+            film.countryId shouldBe 19
 
             film.actors.size shouldBe 2
             film.actors[0].apply {
-                id shouldBe 11
+                id shouldBe 12
                 firstName shouldBe "George"
                 lastName shouldBe "Clooney"
                 birthday shouldBe LocalDate.of(1967, 10, 28)
                 gender shouldBe Gender.MALE
-                countryId shouldBe 18
-                country.id shouldBe 18
+                countryId shouldBe 19
+                country.id shouldBe 19
                 country.name shouldBe "USA"
             }
             film.actors[1].apply {
-                id shouldBe 15
+                id shouldBe 16
                 firstName shouldBe "Salma"
                 lastName shouldBe "Hayek"
                 birthday shouldBe LocalDate.of(1966, 9, 2)
                 gender shouldBe Gender.FEMALE
-                countryId shouldBe 18
-                country.id shouldBe 18
+                countryId shouldBe 19
+                country.id shouldBe 19
                 country.name shouldBe "USA"
             }
         }
@@ -469,38 +469,38 @@ class CinemaServerTest : AnnotationSpec() {
         val usaActors = usa.actors
         usaActors.size shouldBe 2
         usaActors[0].also { actor ->
-            actor.id shouldBe 9
+            actor.id shouldBe 10
             actor.firstName shouldBe "Keanu"
             actor.lastName shouldBe "Reeves"
             actor.birthday shouldBe LocalDate.of(1964, 9, 2)
             actor.gender shouldBe Gender.MALE
-            actor.countryId shouldBe 18
+            actor.countryId shouldBe 19
 
             actor.films.size shouldBe 1
             actor.films[0].apply {
-                id shouldBe 6
+                id shouldBe 7
                 title shouldBe "Street Kings"
                 genre shouldBe Genre.THRILLER
-                countryId shouldBe 17
-                country.id shouldBe 17
+                countryId shouldBe 18
+                country.id shouldBe 18
                 country.name shouldBe "United Kingdom"
             }
         }
         usaActors[1].also { actor ->
-            actor.id shouldBe 10
+            actor.id shouldBe 11
             actor.firstName shouldBe "Julia"
             actor.lastName shouldBe "Roberts"
             actor.birthday shouldBe LocalDate.of(1967, 10, 28)
             actor.gender shouldBe Gender.FEMALE
-            actor.countryId shouldBe 18
+            actor.countryId shouldBe 19
 
             actor.films.size shouldBe 1
             actor.films[0].apply {
-                id shouldBe 8
+                id shouldBe 9
                 title shouldBe "Ocean's Eleven"
                 genre shouldBe Genre.THRILLER
-                countryId shouldBe 18
-                country.id shouldBe 18
+                countryId shouldBe 19
+                country.id shouldBe 19
                 country.name shouldBe "USA"
             }
         }
@@ -524,7 +524,7 @@ class CinemaServerTest : AnnotationSpec() {
 
         list.size shouldBe 4
         list[0].also {
-            it.id shouldBe 8
+            it.id shouldBe 9
             it.tags.size shouldBe 3
             it.tags[0].value shouldBe "best"
             it.tags[1].value shouldBe "julia"
@@ -532,31 +532,31 @@ class CinemaServerTest : AnnotationSpec() {
             (it as Film).apply {
                 title shouldBe "Ocean's Eleven"
                 genre shouldBe Genre.THRILLER
-                countryId shouldBe 18
+                countryId shouldBe 19
             }
         }
         list[1].also {
-            it.id shouldBe 9
+            it.id shouldBe 10
             it.tags.size shouldBe 1
             it.tags[0].value shouldBe "julia"
             (it as Film).apply {
                 title shouldBe "Stepmom"
                 genre shouldBe Genre.DRAMA
-                countryId shouldBe 18
+                countryId shouldBe 19
             }
         }
         list[2].also {
-            it.id shouldBe 10
+            it.id shouldBe 11
             it.tags.size shouldBe 1
             it.tags[0].value shouldBe "julia"
             (it as Film).apply {
                 title shouldBe "Pretty Woman"
                 genre shouldBe Genre.COMEDY
-                countryId shouldBe 18
+                countryId shouldBe 19
             }
         }
         list[3].also {
-            it.id shouldBe 10
+            it.id shouldBe 11
             it.tags.size shouldBe 2
             it.tags[0].value shouldBe "best"
             it.tags[1].value shouldBe "julia"
@@ -565,7 +565,7 @@ class CinemaServerTest : AnnotationSpec() {
                 lastName shouldBe "Roberts"
                 birthday shouldBe LocalDate.of(1967, 10, 28)
                 gender shouldBe Gender.FEMALE
-                countryId shouldBe 18
+                countryId shouldBe 19
             }
         }
     }
@@ -573,7 +573,7 @@ class CinemaServerTest : AnnotationSpec() {
     @Test
     fun unionQuery() = runBlocking {
         val list = context.query {
-            country(17) {
+            country(18) {
                 __minimize()
                 native {
                     __onFilm {
@@ -588,44 +588,44 @@ class CinemaServerTest : AnnotationSpec() {
 
         list.size shouldBe 6
         (list[0] as Film).apply {
-            id shouldBe 4
+            id shouldBe 5
             title shouldBe "House"
             genre shouldBe Genre.COMEDY
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
         (list[1] as Film).apply {
-            id shouldBe 5
+            id shouldBe 6
             title shouldBe "Peter's Friends"
             genre shouldBe Genre.COMEDY
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
         (list[2] as Film).apply {
-            id shouldBe 6
+            id shouldBe 7
             title shouldBe "Street Kings"
             genre shouldBe Genre.THRILLER
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
         (list[3] as Film).apply {
-            id shouldBe 7
+            id shouldBe 8
             title shouldBe "Mr. Pip"
             genre shouldBe Genre.DRAMA
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
         (list[4] as Actor).apply {
-            id shouldBe 7
+            id shouldBe 8
             firstName shouldBe "Hugh"
             lastName shouldBe "Laurie"
             birthday shouldBe LocalDate.of(1959, 6, 11)
             gender shouldBe Gender.MALE
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
         (list[5] as Actor).apply {
-            id shouldBe 8
+            id shouldBe 9
             firstName shouldBe "Stephen"
             lastName shouldBe "Fry"
             birthday shouldBe LocalDate.of(1957, 8, 24)
             gender shouldBe Gender.MALE
-            countryId shouldBe 17
+            countryId shouldBe 18
         }
     }
 
@@ -641,21 +641,21 @@ class CinemaServerTest : AnnotationSpec() {
 
         list.size shouldBe 4
         list[0].also {
-            it.id shouldBe 8
+            it.id shouldBe 9
             it.tags.size shouldBe 3
             it.tags[0].value shouldBe "best"
             it.tags[1].value shouldBe "julia"
             it.tags[2].value shouldBe "clooney"
             (it as Film).apply {
                 title shouldBe "Ocean's Eleven"
-                countryId shouldBe 18
+                countryId shouldBe 19
                 shouldThrow<IllegalStateException> {
                     genre
                 }.message shouldBe "Property [genre] is not available - add [genre] projection to switch on it"
             }
         }
         list[3].also {
-            it.id shouldBe 10
+            it.id shouldBe 11
             it.tags.size shouldBe 2
             it.tags[0].value shouldBe "best"
             it.tags[1].value shouldBe "julia"
@@ -663,7 +663,7 @@ class CinemaServerTest : AnnotationSpec() {
                 firstName shouldBe "Julia"
                 lastName shouldBe "Roberts"
                 birthday shouldBe LocalDate.of(1967, 10, 28)
-                countryId shouldBe 18
+                countryId shouldBe 19
                 shouldThrow<IllegalStateException> {
                     gender
                 }.message shouldBe "Property [gender] is not available - add [gender] projection to switch on it"
@@ -674,26 +674,26 @@ class CinemaServerTest : AnnotationSpec() {
     @Test
     fun unqualifiedUnionQuery() = runBlocking {
         val list = context.query {
-            country(17) {
+            country(18) {
                 native()
             }
         }.country!!.native
 
         list.size shouldBe 6
         (list[0] as Film).apply {
-            id shouldBe 4
+            id shouldBe 5
             title shouldBe "House"
-            countryId shouldBe 17
+            countryId shouldBe 18
             shouldThrow<IllegalStateException> {
                 genre
             }.message shouldBe "Property [genre] is not available - add [genre] projection to switch on it"
         }
         (list[5] as Actor).apply {
-            id shouldBe 8
+            id shouldBe 9
             firstName shouldBe "Stephen"
             lastName shouldBe "Fry"
             birthday shouldBe LocalDate.of(1957, 8, 24)
-            countryId shouldBe 17
+            countryId shouldBe 18
             shouldThrow<IllegalStateException> {
                 gender
             }.message shouldBe "Property [gender] is not available - add [gender] projection to switch on it"

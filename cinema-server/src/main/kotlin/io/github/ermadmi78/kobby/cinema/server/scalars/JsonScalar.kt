@@ -1,5 +1,7 @@
 package io.github.ermadmi78.kobby.cinema.server.scalars
 
+import graphql.GraphQLContext
+import graphql.execution.CoercedVariables
 import graphql.language.*
 import graphql.scalars.util.Kit
 import graphql.schema.*
@@ -20,7 +22,11 @@ object JsonScalar {
         .coercing(
             object : Coercing<JsonObject, Map<String, Any?>> {
                 @Throws(CoercingSerializeException::class)
-                override fun serialize(input: Any): Map<String, Any?> = when (input) {
+                override fun serialize(
+                    input: Any,
+                    graphQLContext: GraphQLContext,
+                    locale: Locale
+                ): Map<String, Any?> = when (input) {
                     is JsonObject -> input.toMap()
                     else -> throw CoercingSerializeException(
                         "Expected a 'JsonObject' type but was '${Kit.typeName(input)}'"
@@ -28,7 +34,11 @@ object JsonScalar {
                 }
 
                 @Throws(CoercingParseValueException::class)
-                override fun parseValue(input: Any): JsonObject = when (input) {
+                override fun parseValue(
+                    input: Any,
+                    graphQLContext: GraphQLContext,
+                    locale: Locale
+                ): JsonObject = when (input) {
                     is JsonObject -> input
                     is Map<*, *> -> input.toJsonObject()
                     else -> throw CoercingParseValueException(
@@ -37,16 +47,14 @@ object JsonScalar {
                 }
 
                 @Throws(CoercingParseLiteralException::class)
-                override fun parseLiteral(input: Any): JsonObject =
+                override fun parseLiteral(
+                    input: Value<*>,
+                    variables: CoercedVariables,
+                    graphQLContext: GraphQLContext,
+                    locale: Locale
+                ): JsonObject =
                     when (input) {
                         is ObjectValue -> input.extractJsonObject(emptyMap())
-                        else -> throw CoercingParseLiteralException("Unexpected literal ${this::class.simpleName}")
-                    }
-
-                @Throws(CoercingParseLiteralException::class)
-                override fun parseLiteral(input: Any, variables: MutableMap<String, Any>): JsonObject =
-                    when (input) {
-                        is ObjectValue -> input.extractJsonObject(variables)
                         else -> throw CoercingParseLiteralException("Unexpected literal ${this::class.simpleName}")
                     }
 
