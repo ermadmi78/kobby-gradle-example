@@ -96,18 +96,31 @@ class ApplicationConfiguration {
     @Bean
     fun securityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
-            .csrf().disable()
-            .authorizeExchange()
-            .pathMatchers("/playground").permitAll()  // Permit GraphQL Playground (http://localhost:8080/playground)
-            .pathMatchers("/voyager").permitAll()  // Permit GraphQL Voyager (http://localhost:8080/voyager)
-            .pathMatchers("/graphiql").permitAll()  // Permit GraphIQL (http://localhost:8080/graphiql)
-            .pathMatchers("/vendor/**").permitAll() // Permit GraphIQL static resources
-            .pathMatchers("/subscriptions").permitAll() // See 'securityFilterChain` method documentation
-            .anyExchange().authenticated()
-            .and()
-            .httpBasic()
-            .and()
-            .formLogin().disable()
+            .csrf {
+                it.disable()
+            }
+            .authorizeExchange {
+                // Permit GraphQL Playground (http://localhost:8080/playground)
+                it.pathMatchers("/playground").permitAll()
+
+                // Permit GraphQL Voyager (http://localhost:8080/voyager)
+                it.pathMatchers("/voyager").permitAll()
+
+                // Permit GraphIQL (http://localhost:8080/graphiql)
+                it.pathMatchers("/graphiql").permitAll()
+
+                // Permit GraphIQL static resources
+                it.pathMatchers("/vendor/**").permitAll()
+
+                // See 'securityFilterChain` method documentation
+                it.pathMatchers("/subscriptions").permitAll()
+
+                it.anyExchange().authenticated()
+            }
+            .httpBasic {}
+            .formLogin {
+                it.disable()
+            }
             .build()
     }
 
