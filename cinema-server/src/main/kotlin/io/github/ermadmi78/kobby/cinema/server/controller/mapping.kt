@@ -1,4 +1,4 @@
-package io.github.ermadmi78.kobby.cinema.server.resolvers
+package io.github.ermadmi78.kobby.cinema.server.controller
 
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
 import io.github.ermadmi78.kobby.cinema.server.jooq.enums.ActorGender

@@ -1,30 +1,32 @@
-package io.github.ermadmi78.kobby.cinema.server.resolvers
+package io.github.ermadmi78.kobby.cinema.server.controller
 
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.ActorDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.CountryDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.FilmDto
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.Genre
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaActorResolver
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
-import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
 import org.jooq.impl.DSL.trueCondition
-import org.springframework.stereotype.Component
+import org.springframework.graphql.data.method.annotation.Argument
+import org.springframework.graphql.data.method.annotation.SchemaMapping
+import org.springframework.stereotype.Controller
 
 /**
  * Created on 03.03.2021
  *
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
-@Component
-class ActorResolver(private val dslContext: DSLContext) : CinemaActorResolver {
+@Controller
+@SchemaMapping(typeName = "Actor")
+class ActorController(private val dslContext: DSLContext) {
     companion object {
         private val ALL_FIELDS = setOf("id", "firstName", "lastName", "birthday", "gender")
     }
 
-    override suspend fun fields(
+    @SchemaMapping
+    suspend fun fields(
         actor: ActorDto,
-        keys: List<String>?
+        @Argument keys: List<String>?
     ): Map<String, Any?> {
         val result = mutableMapOf<String, Any?>()
         (keys?.toSet() ?: ALL_FIELDS).forEach {
@@ -40,18 +42,24 @@ class ActorResolver(private val dslContext: DSLContext) : CinemaActorResolver {
         return result
     }
 
-    override suspend fun country(actor: ActorDto): CountryDto = hasAnyRole("USER", "ADMIN") {
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun country(actor: ActorDto): CountryDto = hasAnyRole("USER", "ADMIN") {
         dslContext.selectFrom(COUNTRY)
             .where(COUNTRY.ID.eq(actor.countryId))
             .fetchAny { it.toDto() }!!
     }
 
-    override suspend fun films(
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun films(
         actor: ActorDto,
-        title: String?,
-        genre: Genre?,
-        limit: Int,
-        offset: Int
+        @Argument title: String?,
+        @Argument genre: Genre?,
+        @Argument limit: Int,
+        @Argument offset: Int
     ): List<FilmDto> = hasAnyRole("USER", "ADMIN") {
         dslContext.select(FILM.asterisk())
             .from(FILM)

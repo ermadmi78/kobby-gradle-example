@@ -22,7 +22,6 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
-import kotlinx.coroutines.runBlocking
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import java.time.LocalDate
@@ -52,6 +51,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
     @BeforeAll
     fun setUp() {
         val client = HttpClient(CIO) {
+            expectSuccess = true
             install(WebSockets)
         }
 
@@ -65,7 +65,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
             CinemaCompositeKtorAdapter(
                 client,
                 "http://localhost:${port!!}/graphql",
-                "ws://localhost:${port!!}/subscriptions",
+                "ws://localhost:${port!!}/graphql",
                 object : CinemaMapper {
                     override fun serialize(value: Any): String =
                         mapper.writeValueAsString(value)
@@ -79,7 +79,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
     }
 
     @Test
-    fun subscriptionsByMeansOfGeneratedAPI() = runBlocking {
+    suspend fun subscriptionsByMeansOfGeneratedAPI() {
         // Created countries subscription
         context.subscription {
             countryCreated()
@@ -185,7 +185,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
     }
 
     @Test
-    fun subscriptionsByMeansOfCustomizedAPI() = runBlocking {
+    suspend fun subscriptionsByMeansOfCustomizedAPI() {
         // Created countries subscription
         context.onCountryCreated().subscribe {
             // Create countries

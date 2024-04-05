@@ -21,7 +21,6 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.jackson.*
-import kotlinx.coroutines.runBlocking
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import java.time.LocalDate
@@ -45,6 +44,7 @@ class CinemaServerTest : AnnotationSpec() {
     @BeforeAll
     fun setUp() {
         val client = HttpClient(CIO) {
+            expectSuccess = true
             Auth {
                 basic {
                     credentials {
@@ -69,7 +69,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun createCountryWithFilmAndActorsByMeansOfGeneratedAPI() = runBlocking {
+    suspend fun createCountryWithFilmAndActorsByMeansOfGeneratedAPI() {
         val country = context.mutation {
             createCountry("USSR")
         }.createCountry
@@ -218,7 +218,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun createCountryWithFilmAndActorsByMeansOfCustomizedAPI() = runBlocking {
+    suspend fun createCountryWithFilmAndActorsByMeansOfCustomizedAPI() {
         val country = context.createCountry("USSR")
 
         country.name shouldBe "USSR"
@@ -341,7 +341,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun simpleQuery() = runBlocking {
+    suspend fun simpleQuery() {
         val country = context.query {
             country(1)
         }.country!!
@@ -410,7 +410,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun complexQuery() = runBlocking {
+    suspend fun complexQuery() {
         val usa = context.query {
             country(19) {
                 films {
@@ -507,7 +507,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun interfaceQuery() = runBlocking {
+    suspend fun interfaceQuery() {
         val list = context.query {
             taggable("julia") {
                 tags {
@@ -571,7 +571,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun unionQuery() = runBlocking {
+    suspend fun unionQuery() {
         val list = context.query {
             country(18) {
                 __minimize()
@@ -630,7 +630,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun unqualifiedInterfaceQuery() = runBlocking {
+    suspend fun unqualifiedInterfaceQuery() {
         val list = context.query {
             taggable("julia") {
                 tags {
@@ -672,7 +672,7 @@ class CinemaServerTest : AnnotationSpec() {
     }
 
     @Test
-    fun unqualifiedUnionQuery() = runBlocking {
+    suspend fun unqualifiedUnionQuery() {
         val list = context.query {
             country(18) {
                 native()

@@ -55,6 +55,7 @@ class Application : CommandLineRunner {
     //******************************************************************************************************************
     private suspend fun simpleKtorAdapterExample() {
         val client = HttpClient(CIO) {
+            expectSuccess = true
             Auth {
                 basic {
                     credentials {
@@ -379,6 +380,7 @@ class Application : CommandLineRunner {
     //******************************************************************************************************************
     suspend fun compositeKtorAdapterExample() {
         val client = HttpClient(CIO) {
+            expectSuccess = true
             install(WebSockets)
         }
 
@@ -392,7 +394,7 @@ class Application : CommandLineRunner {
             CinemaCompositeKtorAdapter(
                 client,
                 "http://localhost:8080/graphql",
-                "ws://localhost:8080/subscriptions",
+                "ws://localhost:8080/graphql",
                 object : CinemaMapper {
                     override fun serialize(value: Any): String =
                         mapper.writeValueAsString(value)

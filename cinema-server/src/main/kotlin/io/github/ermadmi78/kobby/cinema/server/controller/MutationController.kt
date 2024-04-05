@@ -1,13 +1,13 @@
-package io.github.ermadmi78.kobby.cinema.server.resolvers
+package io.github.ermadmi78.kobby.cinema.server.controller
 
 import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.dto.*
-import io.github.ermadmi78.kobby.cinema.api.kobby.kotlin.resolver.CinemaMutationResolver
 import io.github.ermadmi78.kobby.cinema.server.eventbus.EventBus
 import io.github.ermadmi78.kobby.cinema.server.jooq.Tables.*
-import io.github.ermadmi78.kobby.cinema.server.security.hasAnyRole
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.stereotype.Component
+import org.springframework.graphql.data.method.annotation.Argument
+import org.springframework.graphql.data.method.annotation.SchemaMapping
+import org.springframework.stereotype.Controller
 import java.time.LocalDate
 
 /**
@@ -15,32 +15,37 @@ import java.time.LocalDate
  *
  * @author Dmitry Ermakov (ermadmi78@gmail.com)
  */
-@Component
-class MutationResolver(
+@Controller
+@SchemaMapping(typeName = "Mutation")
+class MutationController(
     private val dslContext: DSLContext,
     private val eventBus: EventBus
-) : CinemaMutationResolver {
-    override suspend fun createCountry(name: String): CountryDto = hasAnyRole("ADMIN") {
+) {
+    @SchemaMapping
+    suspend fun createCountry(@Argument name: String): CountryDto = hasAnyRole("ADMIN") {
         println(
             "Mutation create country by user [${authentication.name}] " +
                     "in thread [${Thread.currentThread().name}]"
         )
-        val newCountry = dslContext.insertInto(COUNTRY)
+        dslContext.insertInto(COUNTRY)
             .set(COUNTRY.NAME, name)
             .returning()
             .fetchOne()!!
             .toDto()
-
-        eventBus.fireCountryCreated(newCountry)
-        newCountry
+            .also {
+                eventBus.fireCountryCreated(it)
+            }
     }
 
-    override suspend fun createFilm(
-        countryId: Long,
-        film: FilmInput,
-        tags: TagInput?
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun createFilm(
+        @Argument countryId: Long,
+        @Argument film: FilmInput,
+        @Argument tags: TagInput?
     ): FilmDto = hasAnyRole("ADMIN") {
-        val newFilm = dslContext.insertInto(FILM)
+        dslContext.insertInto(FILM)
             .set(FILM.COUNTRY_ID, countryId)
             .set(FILM.TITLE, film.title)
             .set(FILM.GENRE, film.genre.toRecord())
@@ -48,17 +53,20 @@ class MutationResolver(
             .returning()
             .fetchOne()!!
             .toDto()
-
-        eventBus.fireFilmCreated(newFilm)
-        newFilm
+            .also {
+                eventBus.fireFilmCreated(it)
+            }
     }
 
-    override suspend fun createActor(
-        countryId: Long,
-        actor: ActorInput,
-        tags: TagInput?
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun createActor(
+        @Argument countryId: Long,
+        @Argument actor: ActorInput,
+        @Argument tags: TagInput?
     ): ActorDto = hasAnyRole("ADMIN") {
-        val newActor = dslContext.insertInto(ACTOR)
+        dslContext.insertInto(ACTOR)
             .set(ACTOR.COUNTRY_ID, countryId)
             .set(ACTOR.FIRST_NAME, actor.firstName)
             .set(ACTOR.LAST_NAME, actor.lastName)
@@ -68,14 +76,17 @@ class MutationResolver(
             .returning()
             .fetchOne()!!
             .toDto()
-
-        eventBus.fireActorCreated(newActor)
-        newActor
+            .also {
+                eventBus.fireActorCreated(it)
+            }
     }
 
-    override suspend fun updateBirthday(
-        actorId: Long,
-        birthday: LocalDate
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun updateBirthday(
+        @Argument actorId: Long,
+        @Argument birthday: LocalDate
     ): ActorDto? = hasAnyRole("ADMIN") {
         dslContext.update(ACTOR)
             .set(ACTOR.BIRTHDAY, birthday)
@@ -85,9 +96,12 @@ class MutationResolver(
             ?.toDto()
     }
 
-    override suspend fun associate(
-        filmId: Long,
-        actorId: Long
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun associate(
+        @Argument filmId: Long,
+        @Argument actorId: Long
     ): Boolean = hasAnyRole("ADMIN") {
         dslContext.insertInto(FILM_ACTOR)
             .set(FILM_ACTOR.FILM_ID, filmId)
@@ -96,9 +110,12 @@ class MutationResolver(
             .execute() == 1
     }
 
-    override suspend fun tagFilm(
-        filmId: Long,
-        tagValue: String
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun tagFilm(
+        @Argument filmId: Long,
+        @Argument tagValue: String
     ): Boolean = hasAnyRole("ADMIN") {
         dslContext.update(FILM)
             .set(FILM.TAGS, DSL.function("CONCAT", FILM.TAGS.dataType, FILM.TAGS, DSL.`val`(tagValue)))
@@ -107,9 +124,12 @@ class MutationResolver(
             .execute() == 1
     }
 
-    override suspend fun tagActor(
-        actorId: Long,
-        tagValue: String
+    //******************************************************************************************************************
+
+    @SchemaMapping
+    suspend fun tagActor(
+        @Argument actorId: Long,
+        @Argument tagValue: String
     ): Boolean = hasAnyRole("ADMIN") {
         dslContext.update(ACTOR)
             .set(ACTOR.TAGS, DSL.function("CONCAT", ACTOR.TAGS.dataType, ACTOR.TAGS, DSL.`val`(tagValue)))
