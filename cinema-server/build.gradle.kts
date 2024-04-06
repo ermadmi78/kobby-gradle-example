@@ -37,7 +37,6 @@ val h2Version: String by project
 val jooqVersion: String by project
 val serializationVersion: String by project
 val commonsLang3Version: String by project
-val graphqlJavaKickstartVersion: String by project
 val graphqlJavaExtendedScalarsVersion: String by project
 val ktorVersion: String by project
 
@@ -131,15 +130,14 @@ dependencies {
     implementation(project(":cinema-api"))
 
     implementation(
-        "com.graphql-java-kickstart:graphql-spring-boot-starter:$graphqlJavaKickstartVersion"
-    )
-    implementation(
         "com.graphql-java:graphql-java-extended-scalars:$graphqlJavaExtendedScalarsVersion"
     ) {
         exclude("com.graphql-java", "graphql-java")
     }
 
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
+    implementation("org.springframework.boot:spring-boot-starter-graphql")
+    implementation("org.springframework.data:spring-data-commons")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-test")
@@ -158,7 +156,7 @@ dependencies {
     implementation(kotlin("reflect", kotlinVersion))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinxCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinxCoroutinesVersion")
 
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")

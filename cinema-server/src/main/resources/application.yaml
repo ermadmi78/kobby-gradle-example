@@ -7,22 +7,16 @@ logging:
 
 ---
 spring:
+  graphql:
+    schema:
+      locations: classpath*:io/github/ermadmi78/kobby/cinema/api/**
+    websocket:
+      path: /graphql
+    graphiql:
+      enabled: true
   flyway:
     create-schemas: true
     schemas:
       - cinema
   jooq:
     sql-dialect: h2
-
----
-graphql:
-  tools:
-    schema-location-pattern: io/github/ermadmi78/kobby/cinema/api/cinema.graphqls
-  playground:
-    enabled: true
-    cdn:
-      enabled: false
-    settings:
-      request.credentials: include
-    headers:
-      Authorization: Basic YWRtaW46YWRtaW4=
