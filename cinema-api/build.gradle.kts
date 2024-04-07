@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     `java-library`
-    id("io.github.ermadmi78.kobby") version "4.0.0-alpha.01"
+    id("io.github.ermadmi78.kobby") version "4.0.0"
 }
 
 kobby {
