@@ -378,8 +378,7 @@ class Application : CommandLineRunner {
                 client,
                 "http://localhost:8080/graphql",
                 "ws://localhost:8080/graphql",
-                requestHeaders = { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") },
-                subscriptionReceiveTimeoutMillis = 23000
+                requestHeaders = { mapOf("Authorization" to "Basic YWRtaW46YWRtaW4=") }
             ) {
                 println(">> ${it.query}")
                 println(">> ${it.variables}")
