@@ -2,20 +2,12 @@ import io.github.ermadmi78.kobby.kobby
 
 description = "Cinema API Example"
 
-buildscript {
-    dependencies {
-        classpath("io.github.ermadmi78:kobby-gradle-plugin:5.1.1-SNAPSHOT")
-    }
-}
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     `java-library`
-    //id("io.github.ermadmi78.kobby") version "5.0.0"
+    id("io.github.ermadmi78.kobby") version "5.2.0"
 }
-
-apply(plugin = "io.github.ermadmi78.kobby")
 
 kobby {
     kotlin {
