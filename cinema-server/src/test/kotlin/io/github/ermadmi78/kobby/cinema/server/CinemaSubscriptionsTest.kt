@@ -85,7 +85,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
         // Created films subscription
         context.subscription {
             filmCreated(2) {
-                genre()
+                genre
                 country()
             }
         }.subscribe {
@@ -116,7 +116,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
         // Created actors subscription
         context.subscription {
             actorCreated(2) {
-                gender()
+                gender
                 country()
             }
         }.subscribe {
@@ -185,7 +185,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
         val canada = context.fetchCountry(6)
 
         // Created films subscription
-        australia.onFilmCreated { genre(); country() }.subscribe {
+        australia.onFilmCreated { genre; country() }.subscribe {
             // Create films
             australia.createFilm(FilmInput("First", COMEDY))
             canada.createFilm(FilmInput("Second", THRILLER))
@@ -205,7 +205,7 @@ class CinemaSubscriptionsTest : AnnotationSpec() {
         }
 
         // Created actors subscription
-        australia.onActorCreated { gender(); country() }.subscribe {
+        australia.onActorCreated { gender; country() }.subscribe {
             // Create actors
             val now = LocalDate.now()
             australia.createActor(ActorInput {
